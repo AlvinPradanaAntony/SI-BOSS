@@ -1,36 +1,15 @@
 <?php
-require('koneksi.php');
-require('query.php');
-$obj = new crud;
-
-session_start();
-
-if (!isset($_SESSION['email'])) {
-  header('Location: index.php');
-}
-
-$sesID = $_SESSION['id'];
-$sesName = $_SESSION['name'];
-$sesJK = $_SESSION['jk'];
-$sesAlamat = $_SESSION['alamat'];
-$sesNoHP = $_SESSION['noHP'];
-$sesTerminal = $_SESSION['terminal'];
-$sesEmail = $_SESSION['email'];
-$sesPass = $_SESSION['pass'];
-$sesLvl = $_SESSION['level'];
-$sesFoto = $_SESSION['foto'];
+require_once('layouts/auth.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-  $nama_bus = $_POST['txt_nama_bus'];
-  $harga = $_POST['txt_harga'];
-  $status_bus = $_POST['txt_status_bus'];
-  $jumlah_kursi = $_POST['txt_jumlah_kursi'];
-  $jenis_bus = $_POST['txt_jenis_bus'];
-  $fasilitas = $_POST['txt_fasilitas'];
-  $foto_bus = $_POST['txt_foto_bus'];
-  $tanggal_pemberangkatan = $_POST['txt_tanggal_pemberangkatan'];
-  $id_jenis = $_POST['txt_id_jenis'];
-  $id_rute = $_POST['txt_id_rute'];
+  $nama_bus = $_POST['txt_nama_bus'] ?? '';
+  $harga = $_POST['txt_harga'] ?? '';
+  $status_bus = $_POST['txt_status_bus'] ?? '';
+  $jumlah_kursi = $_POST['txt_jumlah_kursi'] ?? '';
+  $foto_bus = $_POST['txt_foto_bus'] ?? '';
+  $tanggal_pemberangkatan = $_POST['txt_tanggal_pemberangkatan'] ?? '';
+  $id_jenis = $_POST['txt_id_jenis'] ?? '';
+  $id_rute = $_POST['txt_id_rute'] ?? '';
 
   if ($obj->insertBus($nama_bus, $harga, $status_bus, $jumlah_kursi, $foto_bus, $tanggal_pemberangkatan, $id_jenis, $id_rute)) {
     // echo '<div class="alert alert-success">Terminal Berhasil Ditambahkan</div>';
@@ -38,428 +17,115 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // echo '<div class="alert alert-danger">Terminal Gagal Ditambahkan</div>';
   }
 }
+
+$pageTitle = "Data Bus - SI BOSS";
+$activeMenu = "dataBus";
+$extraCSS = '<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+<link rel="stylesheet" href="plugin/datatables/DataTables-1.11.3/css/dataTables.bootstrap5.min.css" />';
+
+// Fetch and process bus data for statistics
+$allBuses = [];
+$busQuery = $obj->lihatBus();
+if ($busQuery->rowCount() > 0) {
+  while ($row = $busQuery->fetch(PDO::FETCH_ASSOC)) {
+    $allBuses[] = $row;
+  }
+}
+
+$totalBus = count($allBuses);
+$busOperasional = 0;
+$busPemeliharaan = 0;
+$totalKursi = 0;
+$prices = [];
+$jenisCounts = [];
+$today = date('Y-m-d');
+$nextDeparture = null;
+
+foreach ($allBuses as $bus) {
+  $status = isset($bus['status_bus']) ? strtolower(trim($bus['status_bus'])) : '';
+  if ($status === 'operasional') {
+    $busOperasional++;
+  } else {
+    $busPemeliharaan++;
+  }
+  
+  $kursi = isset($bus['jumlah_kursi']) ? intval($bus['jumlah_kursi']) : 0;
+  $totalKursi += $kursi;
+  
+  $price = isset($bus['harga']) ? floatval($bus['harga']) : 0;
+  if ($price > 0) {
+    $prices[] = $price;
+  }
+  
+  $jenis = isset($bus['jenis']) ? trim($bus['jenis']) : 'Lainnya';
+  if (!isset($jenisCounts[$jenis])) {
+    $jenisCounts[$jenis] = 0;
+  }
+  $jenisCounts[$jenis]++;
+  
+  $tgl = isset($bus['tanggal_pemberangkatan']) ? $bus['tanggal_pemberangkatan'] : '';
+  if ($tgl >= $today) {
+    if ($nextDeparture === null || $tgl < $nextDeparture) {
+      $nextDeparture = $tgl;
+    }
+  }
+}
+
+$averagePrice = count($prices) > 0 ? array_sum($prices) / count($prices) : 0;
+
+ob_start();
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SI-BOSS Express</title>
-  <link rel="stylesheet" href="plugin/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="plugin/font/stylesheet.css" />
-  <link rel="stylesheet" href="plugin/fontawesome-free/css/all.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" crossorigin="anonymous" />
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css"
-    crossorigin="anonymous" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-  <link rel="stylesheet" href="plugin/datatables/DataTables-1.11.3/css/dataTables.bootstrap5.min.css" />
-</head>
-
-<body>
-  <div class="sidebar">
-    <!-- Logo -->
-    <div class="logo-details">
-      <i class="fas fa-bus"></i>
-      <span class="logo_name">SI-BOSS<span class="logo_nameMin">Express</span></span>
-    </div>
-
-    <!-- List Menu -->
-    <ul class="nav-links">
-      <!-- Heading -->
-      <li class="sidebar-heading mb-2 p-0">Menu :</li>
-      <li class="nav-item">
-        <a href="dashboard.php" class="focusMenu">
-          <div class="frame-ico">
-            <img class="ico" src="img/ico/icoDash_Fill.png" alt="logo1" data-bs-toggle="collapse"
-              data-bs-target="#dashboard" aria-expanded="false" aria-controls="dashboard" />
-          </div>
-          <span class="link_name">Dashboard</span>
-          <i class="bx bxs-chevron-right arrow" data-bs-toggle="collapse" data-bs-target="#dashboard"
-            aria-expanded="false" aria-controls="dashboard"></i>
-        </a>
-        <div id="dashboard" class="collapse">
-          <ul class="sub-menu">
-            <li><a class="link_name" href="dashboard.php">Dashboard</a></li>
-            <li><a href="#">Grafik</a></li>
-            <li><a href="#">Log</a></li>
-            <li><a href="#">Pengaturan</a></li>
-          </ul>
-        </div>
-      </li>
-      <li>
-        <hr>
-      </li>
-      <li class="sidebar-heading mt-2 p-0">List Data</li>
-      <li class="nav-item">
-        <a href="sumberData.php" class="focusMenu">
-          <div class="frame-ico">
-            <img class="ico2" src="img/ico/icoData_noFill.png" alt="logo2" data-bs-toggle="collapse"
-              data-bs-target="#SumberData" aria-expanded="false" aria-controls="SumberData" />
-          </div>
-          <span class="link_name">Sumber Data</span>
-          <i class="bx bxs-chevron-right arrow" data-bs-toggle="collapse" data-bs-target="#SumberData"
-            aria-expanded="false" aria-controls="SumberData"></i>
-        </a>
-        <div id="SumberData" class="collapse">
-          <ul class="sub-menu">
-            <li><a class="link_name" href="sumberData.php">Sumber Data</a></li>
-            <li><a href="#">Terminal</a></li>
-            <li><a href="#">Jenis Bus</a></li>
-            <li><a href="#">Rute User</a></li>
-            <li><a href="#">Penumpang</a></li>
-            <li><a href="#">Staff</a></li>
-          </ul>
-        </div>
-      </li>
-      <li class="nav-item active">
-        <a href="dataBus.php" class="focusMenu">
-          <div class="frame-ico">
-            <img class="ico2" src="img/ico/icoBus_Fill.png" alt="logo1" />
-          </div>
-          <span class="link_name">Data Bus</span>
-        </a>
-        <ul class="sub-menu blank">
-          <li><a class="link_name" href="dataBus.php">Data Bus</a></li>
-        </ul>
-      </li>
-
-      <li class="nav-item">
-        <a href="dataDriver.php" class="focusMenu">
-          <div class="frame-ico">
-            <img class="ico2" src="img/ico/icoDriver_noFill.png" alt="logo1" />
-          </div>
-          <span class="link_name">Data Driver</span>
-        </a>
-        <ul class="sub-menu blank">
-          <li><a class="link_name" href="dataDriver.php">Data Driver</a></li>
-        </ul>
-      </li>
-
-      <?php if ($_SESSION['level'] == "1") : ?>
-      <li class="nav-item">
-        <a href="dataAkun.php" class="focusMenu">
-          <div class="frame-ico">
-            <img class="ico2" src="img/ico/iconProfile_noFill.png" alt="logo1" />
-          </div>
-          <span class="link_name">Data Akun</span>
-        </a>
-        <ul class="sub-menu blank">
-          <li><a class="link_name" href="dataAkun.php">Data Akun</a></li>
-        </ul>
-      </li>
-      <li>
-        <hr class="seperator" />
-      </li>
-      <?php endif ?>
-
-      <li class="sidebar-heading mt-2 p-0">Layanan</li>
-      <li class="nav-item">
-        <a href="dataPemesanan.php" class="focusMenu">
-          <div class="frame-ico">
-            <img class="ico2" src="img/ico/icoBooking_no Fill.png" alt="logo1" />
-          </div>
-          <span class="link_name">Pemesanan</span>
-        </a>
-        <ul class="sub-menu blank">
-          <li><a class="link_name" href="dataPemesanan.php">Pemesanan</a></li>
-        </ul>
-      </li>
-
-      <li class="nav-item">
-        <a href="dataLaporan.php" class="focusMenu">
-          <div class="frame-ico">
-            <img class="ico2" src="img/ico/icoReport_noFill.png" alt="logo1" />
-          </div>
-          <span class="link_name">Laporan</span>
-        </a>
-        <ul class="sub-menu blank">
-          <li><a class="link_name" href="dataLaporan.php">Laporan</a></li>
-        </ul>
-      </li>
-
-      <li class="nav-item">
-        <div class="profile-details">
-          <div class="profile-content">
-            <img src="fotoAdmin/<?php echo $sesFoto; ?>" />
-          </div>
-          <div class="name-job">
-            <div class="profile_name">
-              <span><?= (str_word_count($sesName) > 2 ? substr($sesName, 0, 9) . "..." : $sesName); ?></span>
-            </div>
-            <div class="job">Staff</div>
-          </div>
-          <a class="" href="logout.php"> <i class="bx bx-log-out"></i></a>
-        </div>
-      </li>
-    </ul>
-  </div>
-
-  <!-- Content -->
-  <div class="home-section">
-    <div class="home-content d-flex justify-content-end align-items-center mb-4">
-      <div class="menu">
-        <i class="fas fa-bars"></i>
-      </div>
-      <nav class="custNav">
-        <ul class="nav">
-          <li class="nav-item">
-            <a href="#" class="nav-link transition">
-              <i class="far fa-bell"></i>
-              <?php
-              $data = $obj->lihatAdministrator();
-              $num = $data->rowCount();
-              ?>
-              <span class="badge alert-danger p-1"> <?php echo $num - 1; ?> Staff</span>
-            </a>
-          </li>
-
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" id="dropdownProfile" role="button" data-bs-toggle="dropdown"
-              aria-expanded="false">
-              <span class="RobotoReg14"><?php echo $sesName; ?></span>
-              <img class="img-profile rounded-circle" src="fotoAdmin/<?php echo $sesFoto; ?>" />
-            </a>
-
-            <ul class="dropdown-menu border-0 dropdown-menu-end shadow" aria-labelledby="dropdownProfile">
-              <li>
-                <a class="dropdown-item" data-bs-toggle="modal"
-                  data-bs-target="#editDataAdministrator<?php echo $sesID ?>"><i class="las la-user mr-2"></i>My
-                  Profile</a>
-              </li>
-              <!-- <li>
-                  <a class="dropdown-item" href="#"> <i class="las la-list-alt mr-2"></i> Activity Log </a>
-                </li> -->
-              <li>
-                <div class="dropdown-divider"></div>
-              </li>
-              <li>
-                <a class="dropdown-item" href="logout.php"> <i class="las la-sign-out-alt mr-2"></i> Sign Out </a>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </nav>
-    </div>
-
-    <div id="editDataAdministrator<?php echo $sesID ?>" class="modal fade">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content modal-edit">
-          <form role="form" action="editAdministrator.php" method="POST" enctype="multipart/form-data">
-            <?php
-            $query = $obj->pilihAdministrator($sesID);
-            while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
-            ?>
-            <div class="modal-header">
-              <h4 class="modal-title">Edit Data Administrator</h4>
-              <button type="button" class="btn btn-danger btn-circle btn-user2 shadow" data-bs-dismiss="modal"
-                aria-label="Close" aria-hidden="true">
-                <i class="fa fa-times fa-sm"></i>
-              </button>
-            </div>
-            <div class="modal-body">
-
-              <div class="row">
-                <div class="col-lg-12 mb-3" hidden>
-                  <label for="inputId" class="form-label">Id</label>
-                  <input type="text" class="form-control form-control-user2" id="inputId" name="txt_id_user_admin"
-                    value="<?php echo $sesID ?>" placeholder="" readonly />
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-lg-6 mb-3">
-                  <!-- <form action="editAdministrator.php" method="POST" enctype="multipart/form-data"> -->
-                  <div class="form-group">
-                    <label for="InputFotoBus" class="form-label">Foto Administrator</label>
-                    <div class="img-div">
-                      <div class="img-placeholder" onClick="triggerClick()">
-                        <img src="img/ico/icons8_driver_50px.png" alt="" />
-                      </div>
-                      <img class="img-profile rounded-circle" src="fotoAdmin/<?php echo $sesFoto; ?>"
-                        onClick="triggerClick()" id="profileDisplay" />
-                      <!-- <img src="img/ico/icons8_driver_50px.png" onClick="triggerClick()" id="profileDisplay" /> -->
-                    </div>
-                    <input type="file" name="txt_fotoEa" onChange="displayImage(this)" id="profileImage"
-                      class="form-control" style="display: none;" />
-                    <!-- <a href="#" class="float-end view text-secondary"> Lihat Foto </a> -->
-                  </div>
-                </div>
-                <!-- </form> -->
-
-                <div class="col-lg-6 mb-3">
-                  <label for="inputNama" class="form-label">Nama</label>
-                  <input type="text" class="form-control form-control-user2" id="inputNama" name="txt_nama"
-                    placeholder="Ex: Budi Santoso" required data-parsley-required-message="Data harus di isi !!!"
-                    value="<?php echo $sesName ?>" />
-                  <label for="InputJenisKelamin" class="form-label">Jenis Kelamin</label>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="Rbtn_jenis_kelamin" id="Radios1"
-                      value="Laki-laki" checked />
-                    <label class="form-label2" for="Radios1"><span>Laki-laki</span></label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="Rbtn_jenis_kelamin" id="Radios2"
-                      value="Perempuan" />
-                    <label class="form-label2" for="Radios2"><span>Perempuan</span></label>
-                  </div>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-lg-6 mb-3">
-                  <label for="inputAlamat" class="form-label">Alamat</label>
-                  <input type="text" class="form-control form-control-user2" id="inputAlamat" name="txt_alamat"
-                    placeholder="Ex: Jl. Dharmawangsa" required data-parsley-required-message="Data harus di isi !!!"
-                    value="<?php echo $sesAlamat ?>" />
-                </div>
-                <div class="col-lg-6 mb-3">
-                  <label for="inputNoHp" class="form-label">No Handphone</label>
-                  <input type="number" class="form-control form-control-user2" id="inputNoHp" name="txt_no_hp"
-                    placeholder="Ex: 085808241205" required data-parsley-required-message="Data harus di isi !!!"
-                    value="<?php echo $sesNoHP ?>" />
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-lg-6 mb-3">
-                  <label for="inputEmail" class="form-label">Email</label>
-                  <input type="email" class="form-control form-control-user2" id="inputEmail" name="txt_email"
-                    placeholder="Ex: admin@gmail.com" required data-parsley-required-message="Data harus di isi !!!"
-                    value="<?php echo $sesEmail ?>" />
-                </div>
-                <div class="col-lg-6 mb-3">
-                  <label for="inputPassword" class="form-label">Password</label>
-                  <input type="password" class="form-control form-control-user2" id="inputPassword" name="txt_password"
-                    placeholder="Ex: ********" required data-parsley-required-message="Data harus di isi !!!"
-                    value="<?php echo $sesPass ?>" />
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-lg-6 mb-3" hidden>
-                  <label for="inputId" class="form-label">Status</label>
-                  <input type="text" class="form-control form-control-user2" id="inputId" name="txt_id_level"
-                    value="<?php echo $sesLvl ?>" placeholder="" readonly />
-                </div>
-                <div class="col-lg-6 mb-3">
-                  <label for="inputId" class="form-label">Status</label>
-                  <input type="text" class="form-control form-control-user2" id="inputId" name="txt" value="Staff"
-                    placeholder="" readonly />
-                </div>
-                <div class="col-lg-6 mb-3" hidden>
-                  <label for="inputId" class="form-label">Terminal</label>
-                  <input type="text" class="form-control form-control-user2" id="inputId" name="txt_id_terminal"
-                    value="<?php echo $sesTerminal ?>" placeholder="" readonly />
-                </div>
-              </div>
-
-              <div class="modal-footer">
-                <button class="btn btn-secondary roundedBtn" type="button" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" class="btn text-white colorPrimary roundedBtn" name="simpan">Update</button>
-              </div>
-            </div>
-          </form>
-          <?php
-            }
-        ?>
-        </div>
-      </div>
-    </div>
-
-    <!-- Content Row -->
-    <div class="row m-0 px-3 rowCustom">
-      <!-- Card Total Data Bus -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 gradientBlue shadow h-100 py-2 rounded">
+    <!-- ============ STAT CARDS ============ -->
+    <div class="row m-0 px-3 pt-navbar">
+      <!-- Card: Total Armada -->
+      <div class="col-6 col-md-6 col-xl-3 mb-4">
+        <div class="card stat-card bg-gradient-blue shadow h-100">
           <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="RobotoReg14 text-white">Data Bus</div>
-                <div class="RobotoBold18 text-white">
-                  <?php
-                  $data = $obj->lihatBus();
-                  $num = $data->rowCount();
-                  echo $num;
-                  ?><span> Bus</span></div>
-              </div>
-              <div class="col-auto">
-                <img src="img/ico/icons8_Shuttle_bus_50px.png" alt="logoBus" />
-              </div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="stat-icon"><i class="bx bxs-bus"></i></div>
             </div>
+            <div class="stat-label">Total Armada</div>
+            <div class="stat-value"><?= $totalBus; ?><span class="stat-unit">Bus</span></div>
           </div>
         </div>
       </div>
 
-      <!-- Card Total Data Driver -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 gradientPink shadow h-100 py-2 rounded">
+      <!-- Card: Bus Operasional -->
+      <div class="col-6 col-md-6 col-xl-3 mb-4">
+        <div class="card stat-card bg-gradient-green shadow h-100">
           <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="RobotoReg14 text-white">Data Driver</div>
-                <div class="RobotoBold18 text-white">(Belum Tersedia)</div>
-              </div>
-              <div class="col-auto">
-                <img src="img/ico/icons8_driver_50px.png" alt="logoDriver" />
-              </div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="stat-icon"><i class="bx bxs-check-circle"></i></div>
             </div>
+            <div class="stat-label">Bus Operasional</div>
+            <div class="stat-value"><?= $busOperasional; ?><span class="stat-unit">Bus</span></div>
           </div>
         </div>
       </div>
 
-      <!-- Card Total Data Pemesanan -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 gradientYellow shadow h-100 py-2 rounded">
+      <!-- Card: Dalam Perbaikan -->
+      <div class="col-6 col-md-6 col-xl-3 mb-4">
+        <div class="card stat-card bg-gradient-pink shadow h-100">
           <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="RobotoReg14 text-white">Data Pemesanan</div>
-                <div class="RobotoBold18 text-white">
-                  <?php
-                  $data = $obj->lihatPemesanan();
-                  $num = $data->rowCount();
-                  echo $num;
-                  ?> Pesanan</div>
-              </div>
-              <div class="col-auto">
-                <img src="img/ico/icons8_bus_tickets_50px.png" alt="logoTicket" />
-              </div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="stat-icon"><i class="bx bxs-wrench"></i></div>
             </div>
+            <div class="stat-label">Dalam Perbaikan</div>
+            <div class="stat-value"><?= $busPemeliharaan; ?><span class="stat-unit">Bus</span></div>
           </div>
         </div>
       </div>
 
-      <!-- Card Total Data Penghasilan -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 gradientGreen shadow h-100 py-2 rounded">
+      <!-- Card: Total Kapasitas -->
+      <div class="col-6 col-md-6 col-xl-3 mb-4">
+        <div class="card stat-card bg-gradient-yellow shadow h-100">
           <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="RobotoReg14 text-white">Total Penghasilan</div>
-                <div class="RobotoBold18 text-white"><span>Rp.</span>
-                  <?php
-                  $data = $obj->lihatPemesanan();
-                  $no = 1;
-                  if ($data->rowCount() > 0) {
-                    if ($sesLvl == 1) {
-                      $dis = "";
-                    } else {
-                      $dis = "disabled";
-                    }
-                    while ($row = $data->fetch(PDO::FETCH_ASSOC)) {
-                      $no++;
-                      $hargatotal[$no] = $row['total_bayar'];
-                    }
-                    echo "" . array_sum($hargatotal);
-                  } ?></div>
-              </div>
-              <div class="col-auto">
-                <img src="img/ico/icons8_add_dollar_45px.png" alt="logoPay" />
-              </div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="stat-icon"><i class="bx bxs-group"></i></div>
             </div>
+            <div class="stat-label">Kapasitas Kursi</div>
+            <div class="stat-value"><?= $totalKursi; ?><span class="stat-unit">Kursi</span></div>
           </div>
         </div>
       </div>
@@ -469,26 +135,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="row g-2 m-0 px-4">
       <div class="col-lg-12">
         <div class="card shadow mb-4 rounded">
-          <div class="card-header shadow rounded">
-            <div class="title float-start">
+          <div class="card-header shadow rounded d-flex align-items-center justify-content-between gap-2">
+            <div class="title d-flex align-items-center gap-2">
+              <i class="bx bxs-bus fs-5"></i>
               <span class="m-0"><b>Tabel Data Bus</b></span>
             </div>
-            <div class="btnAction float-end">
-              <button class="btn btn-light text-dark btn-circle custShadow2 me-2" data-bs-toggle="modal"
-                data-bs-target="#tambahDataBus"><i class="fas fa-plus" data-bs-toggle="tooltip"
+            <div class="btnAction d-flex align-items-center gap-2">
+              <button type="button" id="btnAddBus" class="btn btn-light text-dark btn-circle shadow" data-bs-toggle="modal"
+                data-bs-target="#modalFormBus"><i class="bx bx-plus" data-bs-toggle="tooltip"
                   title="Tambah Data"></i></button>
-              <!-- <button class="btn btn-light text-danger btn-circle custShadow2" data-bs-toggle="modal" data-bs-target="#deleteDataBus"><i class="fas fa-trash" data-bs-toggle="tooltip" title="Hapus Data"></i></button> -->
             </div>
           </div>
           <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover dataTable nowrap" width="100%">
+            <table class="table table-hover dataTable nowrap align-middle w-100">
                 <thead>
                   <tr>
                     <th class="cb">
-                      <span class="custom-checkbox">
-                        <input type="checkbox" class="selectAll" />
-                        <label for="selectAll"></label>
+                      <span class="form-check d-inline-block">
+                        <input type="checkbox" class="form-check-input selectAll" aria-label="Pilih semua data" />
                       </span>
                     </th>
                     <th class="actions">Action</th>
@@ -505,27 +169,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <th class="tujuan">Tujuan</th>
                     <th class="waktu">Waktu Berangkat</th>
                     <th class="waktuTiba">Waktu Tiba</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
                     <!-- <th class="detailRute">Detail Rute</th> -->
                   </tr>
                 </thead>
                 <tbody>
                   <?php
-                  $data = $obj->lihatBus();
                   $no = 1;
-                  if ($data->rowCount() > 0) {
-                    if ($sesLvl == 1) {
-                      $dis = "";
-                    } else {
-                      $dis = "disabled";
-                    }
-                    while ($row = $data->fetch(PDO::FETCH_ASSOC)) {
+                  if (count($allBuses) > 0) {
+                    foreach ($allBuses as $row) {
                       $id_bus = $row['id_bus'];
                       $nama_bus = $row['nama_bus'];
                       $harga = $row['harga'];
                       $status_bus = $row['status_bus'];
                       $jumlah_kursi = $row['jumlah_kursi'];
                       $foto_bus = $row['foto_bus'];
-                      // $id_jenis = $row['id_jenis'];
                       $jenis_bus = $row['jenis'];
                       $fasilitas = $row['fasilitas'];
                       $tanggal_pemberangkatan = $row['tanggal_pemberangkatan'];
@@ -533,369 +192,253 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                       $waktu_berangkat = $row['waktu_berangkat'];
                       $tujuan = $row['tujuan'];
                       $waktu_tiba = $row['waktu_tiba'];
-                      // $id_terminal = $row['id_terminal'];
-                      // $nama_terminal = $row['nama_terminal'];
+                      $id_jenis = $row['id_jenis'] ?? '';
+                      $id_rute = $row['id_rute'] ?? '';
+                      $created_at = $row['created_at'] ?? null;
+                      $updated_at = $row['updated_at'] ?? null;
                   ?>
                   <tr>
                     <td>
-                      <span class="custom-checkbox">
-                        <input type="checkbox" id="checkbox1" name="option[]" value="<?php echo $no; ?>" />
-                        <label for="checkbox1"></label>
+                      <span class="form-check d-inline-block">
+                        <input type="checkbox" class="form-check-input" aria-label="Pilih data" name="option[]" value="<?php echo $no; ?>" />
                       </span>
                     </td>
                     <td>
-                      <a href="#" class="actionBtn" aria-label="Edit">
-                        <button class="btn btn-success btn-user btn-circle" aria-label="EditModal"
-                          data-bs-toggle="modal" data-bs-target="#editDataBus<?php echo $id_bus ?>" value="edit">
-                          &nbsp;<i class="fa fa-edit fa-sm" data-bs-toggle="tooltip" title="Edit"></i>
+                        <button type="button" class="btn btn-success btn-user btn-circle btn-edit-bus" aria-label="EditModal"
+                          data-bs-toggle="modal" data-bs-target="#modalFormBus" 
+                          data-id="<?php echo $id_bus; ?>"
+                          data-nama="<?php echo htmlspecialchars($nama_bus); ?>"
+                          data-harga="<?php echo $harga; ?>"
+                          data-status="<?php echo $status_bus; ?>"
+                          data-kursi="<?php echo $jumlah_kursi; ?>"
+                          data-foto="<?php echo htmlspecialchars($foto_bus); ?>"
+                          data-idjenis="<?php echo $id_jenis; ?>"
+                          data-idrute="<?php echo $id_rute; ?>"
+                          data-tanggal="<?php echo $tanggal_pemberangkatan; ?>"
+                          title="Edit">
+                          &nbsp;<i class="bx bx-edit" data-bs-toggle="tooltip" title="Edit"></i>
                         </button>
-                      </a>
-                      <a href="#" class="actionBtn" aria-label="Delete">
-                        <button class="btn btn-danger btn-user btn-circle" aria-label="DeleteModal"
-                          data-bs-toggle="modal" data-bs-target="#deleteDataBus<?php echo $id_bus ?>" value="hapus">
-                          <i class="fa fa-trash fa-sm" data-bs-toggle="tooltip" title="Delete"></i>
+                        <button type="button" class="btn btn-danger btn-user btn-circle btn-delete-bus" aria-label="DeleteModal"
+                          data-id="<?php echo $id_bus; ?>"
+                          data-nama="<?php echo htmlspecialchars($nama_bus); ?>"
+                          value="hapus">
+                          <i class="bx bx-trash" data-bs-toggle="tooltip" title="Delete"></i>
                         </button>
-                      </a>
-
-                      <!-- Edit Modal -->
-                      <div id="editDataBus<?php echo $id_bus ?>" class="modal fade">
-                        <div class="modal-dialog modal-lg">
-                          <div class="modal-content modal-edit">
-                            <form role="form" action="editBus.php" method="POST" enctype="multipart/form-data">
-                              <?php
-                            $query = $obj->pilihBus($id_bus);
-                            while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
-                                  ?>
-                              <div class="modal-header">
-                                <h4 class="modal-title">Edit Data Bus</h4>
-                                <button type="button" class="btn btn-danger btn-circle btn-user2 shadow"
-                                  data-bs-dismiss="modal" aria-label="Close" aria-hidden="true">
-                                  <i class="fa fa-times fa-sm"></i>
-                                </button>
-                              </div>
-                              <div class="modal-body">
-                                <div class="row">
-                                  <div class="col-md-6">
-                                    <div class="form-group" hidden>
-                                      <label for="InputId" class="form-label">Id</label>
-                                      <input type="text" class="form-control form-control-user2" id="inputId"
-                                        name="txt_id_bus" value="<?php echo $id_bus ?>" placeholder="" readonly />
-                                    </div>
-                                    <div class="form-group">
-                                      <label for="InputFotoBus" class="form-label">Foto Bus</label>
-                                      <div class="img-div">
-                                        <div class="img-placeholder" onClick="triggerClick()">
-                                          <img src="img/ico/IcoeditBusW.png" alt="" />
-                                        </div>
-                                        <img src="img/ico/IcoeditBus.png" onClick="triggerClick()"
-                                          id="profileDisplay" />
-                                      </div>
-                                      <input type="file" name="txt_foto_bus" onChange="displayImage(this)"
-                                        id="profileImage" class="form-control" style="display: none" />
-                                      <!-- <a href="#" class="float-end view text-secondary"> Lihat Foto </a> -->
-                                    </div>
-                                    <div class="form-group">
-                                      <label for="InputStatusBus" class="form-label d-block">Status</label>
-                                      <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="txt_status_bus"
-                                          id="exampleRadios1" value="Operasional" checked />
-                                        <label class="form-check-label" for="exampleRadios1"> Operasional </label>
-                                      </div>
-                                      <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="txt_status_bus"
-                                          id="exampleRadios2" value="Pemeliharaan" />
-                                        <label class="form-check-label" for="exampleRadios2"> Pemeliharaan/Maintenance
-                                        </label>
-                                      </div>
-                                    </div>
-                                    <div class="form-group">
-                                      <label for="inputFoto" class="form-label">Jumlah Kursi</label>
-                                      <input type="number" class="form-control form-control-user2" id="inputFoto"
-                                        name="txt_jumlah_kursi" placeholder="Ex: 50" required
-                                        data-parsley-required-message="Data harus di isi !!!"
-                                        value="<?php echo $jumlah_kursi ?>" />
-                                    </div>
-                                    <div class="form-group">
-                                      <label for="InputTarif" class="form-label">Tarif</label>
-                                      <div class="input-group mb-3">
-                                        <span class="input-group-text tarif">Rp</span>
-                                        <input type="number" class="form-control form-control-user2"
-                                          aria-label="Amount (to the nearest dollar)" name="txt_harga" required
-                                          data-parsley-required-message="Data harus di isi !!!" placeholder="Ex: 50000"
-                                          value="<?php echo $harga ?>">
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div class="col-md-6">
-                                    <div class="form-group">
-                                      <label for="InputNamaBus" class="form-label">Nama Bus</label>
-                                      <input type="text" class="form-control form-control-user2" id="inputNama"
-                                        name="txt_nama_bus" placeholder="Ex: Pahala Kencana" required
-                                        data-parsley-required-message="Data harus di isi !!!"
-                                        value="<?php echo $nama_bus ?>" />
-                                    </div>
-                                    <div class="form-group">
-                                      <label for="InputJenisBus" class="form-label">Jenis Bus</label>
-                                      <select class="form-select form-select-user select-md"
-                                        aria-label=".form-select-sm example" required
-                                        data-parsley-required-message="Harap pilih data jenis !!!" name="txt_id_jenis">
-                                        <option disabled selected>Pilih Jenis Bus</option>
-                                        <?php
-                                              $datas = $obj->lihatJenisBus();
-                                              $no = 1;
-                                              if ($datas->rowCount() > 0) {
-                                                if ($sesLvl == 1) {
-                                                  $dis = "";
-                                                } else {
-                                                  $dis = "disabled";
-                                                }
-                                                while ($row = $datas->fetch(PDO::FETCH_ASSOC)) {
-                                                  $id_jeniss = $row['id_jenis'];
-                                                  $jeniss = $row['jenis'];
-                                                  $fasilitass = $row['fasilitas'];
-                                              ?>
-                                        <option value="<?php echo $id_jeniss; ?>"><?php echo $jeniss; ?></option>
-                                        <?php
-                                                }
-                                              }
-                                              ?>
-                                      </select>
-                                    </div>
-                                    <div class="form-group">
-                                      <label for="InputJenisBus" class="form-label">Rute</label>
-                                      <select class="form-select form-select-user select-md"
-                                        aria-label=".form-select-sm example" required
-                                        data-parsley-required-message="Harap pilih data rute !!!" name="txt_id_rute">
-                                        <option disabled selected>Pilih Rute</option>
-                                        <?php
-                                              $datasd = $obj->lihatRute();
-                                              $no = 1;
-                                              if ($datasd->rowCount() > 0) {
-                                                if ($sesLvl == 1) {
-                                                  $dis = "";
-                                                } else {
-                                                  $dis = "disabled";
-                                                }
-                                                while ($row = $datasd->fetch(PDO::FETCH_ASSOC)) {
-                                                  $id_rutes = $row['id_rute'];
-                                                  $pemberangkatans = $row['pemberangkatan'];
-                                                  $tujuans = $row['tujuan'];
-                                              ?>
-                                        <option value="<?php echo $id_rutes; ?>">
-                                          <?php echo $pemberangkatans, " - ", $tujuans; ?></option>
-                                        <?php
-                                                }
-                                              }
-                                              ?>
-                                      </select>
-                                    </div>
-                                    <div class="form-group">
-                                      <label for="InputTglPemberangkatan" class="form-label">Tanggal
-                                        Pemberangkatan</label>
-                                      <input type="date" class="form-control form-control-user2"
-                                        id="InputTglPemberangkatan" name="txt_tanggal_pemberangkatan" required
-                                        data-parsley-required-message="Data harus di isi !!!"
-                                        value="<?php echo $tanggal_pemberangkatan ?>">
-                                    </div>
-
-                                  </div>
-                                  <div class="modal-footer">
-                                    <button class="btn btn-secondary roundedBtn" type="button"
-                                      data-bs-dismiss="modal">Batal</button>
-                                    <button type="submit" class="btn text-white colorPrimary roundedBtn"
-                                      name="simpan">Update</button>
-                                  </div>
-                                </div>
-                            </form>
-                            <?php
-                                  }
-                              ?>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-            <!-- Delete Modal -->
-            <div id="deleteDataBus<?php echo $id_bus; ?>" class="modal fade">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <form action="">
-                    <div class="modal-header">
-                      <h4 class="modal-title">Hapus Bus</h4>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                        aria-hidden="true"></button>
-                    </div>
-                    <div class="modal-body">
-                      <p>Apakah Anda yakin ingin menghapus data bus ini ?</p>
-                      <p class="text-warning"><small>Perlu hati-hati karena data akan hilang selamanya !</small></p>
-                    </div>
-                    <div class="modal-footer">
-                      <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Batal</button>
-                      <a class="btn btn-danger" href="hapusBus.php?id_bus=<?php echo $id_bus; ?>">Hapus</a>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
+                    </td>
+            <td><span class="fw-semibold">B000<?php echo $id_bus; ?></span></td>
+            <td>
+              <a href="fotoBus/<?php echo $foto_bus; ?>" class="glightbox">
+                <img src="fotoBus/<?php echo $foto_bus; ?>" class='img-table-row' alt="Foto Bus">
+              </a>
             </td>
-            <td>B000<?php echo $id_bus; ?></td>
-            <td><img src="fotoBus/<?php echo $foto_bus; ?>" class='img-fluid'></td>
-            <td><?php echo $nama_bus; ?></td>
+            <td><span class="fw-semibold"><?php echo $nama_bus; ?></span></td>
             <td>Rp. <?php echo number_format($harga); ?></td>
-            <td><?php echo $status_bus; ?></td>
+            <td>
+              <?php $sb = strtolower(trim($status_bus)); ?>
+              <span class="status-pill <?php echo $sb === 'operasional' ? 'status-on' : 'status-process'; ?>">
+                <?php echo $status_bus; ?>
+              </span>
+            </td>
             <td><?php echo $jumlah_kursi; ?> kursi</td>
-            <td><?php echo $jenis_bus; ?></td>
-            <td><?php echo $fasilitas; ?></td>
-            <td><?php echo $tanggal_pemberangkatan ?></td>
-            <td><?php echo $pemberangkatan ?></td>
-            <td><?php echo $tujuan ?></td>
+            <td>
+              <?php 
+              $jClass = strtolower(trim($jenis_bus));
+              $badgeClass = 'jenis-other';
+              if (strpos($jClass, 'eksekutif') !== false) {
+                $badgeClass = 'jenis-eksekutif';
+              } elseif (strpos($jClass, 'bisnis') !== false) {
+                $badgeClass = 'jenis-bisnis';
+              } elseif (strpos($jClass, 'patas') !== false) {
+                $badgeClass = 'jenis-patas';
+              } elseif (strpos($jClass, 'ekonomi') !== false) {
+                $badgeClass = 'jenis-ekonomi';
+              }
+              echo '<span class="badge-jenis ' . $badgeClass . '">' . htmlspecialchars($jenis_bus) . '</span>';
+              ?>
+            </td>
+            <td>
+              <div class="d-flex flex-wrap gap-1">
+                <?php 
+                if (!empty($fasilitas)) {
+                  $arrFasilitas = explode(',', $fasilitas);
+                  foreach ($arrFasilitas as $f) {
+                    $fTrimmed = htmlspecialchars(trim($f));
+                    if ($fTrimmed !== '') {
+                      echo '<span class="badge-chip">' . $fTrimmed . '</span>';
+                    }
+                  }
+                } else {
+                  echo '<span class="text-muted">—</span>';
+                }
+                ?>
+              </div>
+            </td>
+            <td><?php echo $tanggal_pemberangkatan; ?></td>
+            <td><?php echo $pemberangkatan; ?></td>
+            <td><?php echo $tujuan; ?></td>
             <td><?php echo $waktu_berangkat; ?> WIB</td>
             <td><?php echo $waktu_tiba; ?> WIB</td>
+            <td><?php echo $created_at ? '<span class="badge-waktu"><i class="bx bx-calendar"></i> ' . date('d M Y, H:i', strtotime($created_at)) . '</span>' : '-'; ?></td>
+            <td><?php echo $updated_at ? '<span class="badge-waktu"><i class="bx bx-calendar"></i> ' . date('d M Y, H:i', strtotime($updated_at)) . '</span>' : '-'; ?></td>
             </tr>
             <?php
                       $no++;
                     }
                   }
-        ?>
+            ?>
             </tbody>
-            </table>
-          </div>
+          </table>
         </div>
 
-        <!-- Tambah Modal -->
-        <div id="tambahDataBus" class="modal fade">
+        <!-- Generic Form Modal -->
+        <div id="modalFormBus" class="modal fade" tabindex="-1">
           <div class="modal-dialog modal-lg">
-            <div class="modal-content modal-edit">
-              <form role="form" action="tambahBus.php" method="POST">
+            <div class="modal-content">
+              <form id="formBus" role="form" action="tambahBus.php" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="txt_id_bus" id="inputIdBus" value="" />
                 <div class="modal-header">
-                  <h4 class="modal-title">Tambah Data Bus</h4>
-                  <button type="button" class="btn btn-danger btn-circle btn-user2 shadow" data-bs-dismiss="modal"
-                    aria-label="Close" aria-hidden="true">
-                    <i class="fa fa-times fa-sm"></i>
+                  <div class="d-flex align-items-center gap-2">
+                    <i id="modalIconBus" class="bx bx-plus-circle fs-4"></i>
+                    <h4 id="modalTitleBus" class="modal-title m-0">Tambah Data Bus</h4>
+                  </div>
+                  <button type="button" class="btn btn-danger btn-circle" data-bs-dismiss="modal"
+                    aria-label="Close">
+                    <i class="bx bx-x"></i>
                   </button>
                 </div>
-                <div class="modal-body">
-                  <div class="row">
-                    <div class="col-md-6">
-                      <div class="form-group" hidden>
-                        <label for="InputId" class="form-label">Id</label>
-                        <input type="text" class="form-control form-control-user2" id="inputId" name="txt_id_bus"
-                          placeholder="" readonly />
-                      </div>
-                      <div class="form-group">
-                        <label for="InputFotoBus" class="form-label">Foto Bus</label>
-                        <div class="img-div">
-                          <div class="img-placeholder" onClick="triggerClick()">
-                            <img src="img/ico/IcoeditBusW.png" alt="" />
+                <div class="modal-body p-4">
+                  <div class="row g-4">
+                    <!-- Left Side (Visual & Status) -->
+                    <div class="col-md-5 d-flex flex-column gap-3">
+                      <div>
+                        <label class="form-label mb-2">Foto Bus</label>
+                        <div class="bus-image-upload-wrapper shadow-sm" onclick="document.getElementById('fileInputBus').click()">
+                          <div class="upload-placeholder d-flex flex-column align-items-center justify-content-center gap-2">
+                            <i class="bx bx-image-add fs-1 text-muted"></i>
+                            <span class="text-muted" style="font-size: 13px; font-weight: 500;">Pilih Foto Bus</span>
                           </div>
-                          <img src="img/ico/IcoeditBus.png" onClick="triggerClick()" id="profileDisplay" />
+                          <div class="upload-overlay">
+                            <i class="bx bx-camera fs-3"></i>
+                            <span id="modalFotoLabelBus" style="font-size: 13px; font-weight: 500;">Pilih Foto Bus</span>
+                          </div>
+                          <!-- Default placeholder if no image -->
+                          <img src="" id="busPreview" alt="Foto Bus Preview" />
                         </div>
-                        <input type="file" name="txt_foto_bus" onChange="displayImage(this)" id="profileImage"
-                          class="form-control" style="display: none" />
-                        <!-- <a href="#" class="float-end view text-secondary"> Lihat Foto </a> -->
-                      </div>
-                      <div class="form-group">
-                        <label for="InputStatusBus" class="form-label d-block">Status</label>
-                        <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="txt_status_bus" id="exampleRadios1"
-                            value="Operasional" checked />
-                          <label class="form-check-label" for="exampleRadios1"> Operasional </label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                          <input class="form-check-input" type="radio" name="txt_status_bus" id="exampleRadios2"
-                            value="Pemeliharaan" />
-                          <label class="form-check-label" for="exampleRadios2"> Pemeliharaan/Maintenance </label>
-                        </div>
-                      </div>
-                      <div class="form-group">
-                        <label for="inputFoto" class="form-label">Jumlah Kursi</label>
-                        <input type="number" class="form-control form-control-user2" id="inputFoto"
-                          name="txt_jumlah_kursi" required data-parsley-required-message="Data harus di isi !!!"
-                          placeholder="Ex: 50" />
-                      </div>
-                      <div class="form-group">
-                        <label for="InputTarif" class="form-label">Tarif</label>
-                        <div class="input-group mb-3">
-                          <span class="input-group-text tarif">Rp</span>
-                          <input type="number" class="form-control form-control-user2"
-                            aria-label="Amount (to the nearest dollar)" required
-                            data-parsley-required-message="Data harus di isi !!!" name="txt_harga"
-                            placeholder="Ex: 50000">
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="InputNamaBus" class="form-label">Nama Bus</label>
-                        <input type="text" class="form-control form-control-user2" id="inputNama" name="txt_nama_bus"
-                          required data-parsley-required-message="Data harus di isi !!!"
-                          placeholder="Ex: Pahala Kencana" />
-                      </div>
-                      <div class="form-group">
-                        <label for="InputJenisBus" class="form-label">Jenis Bus</label>
-                        <select class="form-select form-select-user select-md" aria-label=".form-select-sm example"
-                          required data-parsley-required-message="Harap pilih data jenis !!!" name="txt_id_jenis">
-                          <option disabled selected>Pilih Jenis Bus</option>
-                          <?php
-                          $datas = $obj->lihatJenisBus();
-                          $no = 1;
-                          if ($datas->rowCount() > 0) {
-                            if ($sesLvl == 1) {
-                              $dis = "";
-                            } else {
-                              $dis = "disabled";
-                            }
-                            while ($row = $datas->fetch(PDO::FETCH_ASSOC)) {
-                              $id_jeniss = $row['id_jenis'];
-                              $jeniss = $row['jenis'];
-                          ?>
-                          <option value="<?php echo $id_jeniss; ?>"><?php echo $jeniss; ?></option>
-                          <?php
-                            }
-                          }
-                          ?>
-                        </select>
-                      </div>
-                      <div class="form-group">
-                        <label for="InputJenisBus" class="form-label">Rute</label>
-                        <select class="form-select form-select-user select-md" aria-label=".form-select-sm example"
-                          required data-parsley-required-message="Harap pilih data rute !!!" name="txt_id_rute">
-                          <option disabled selected>Pilih Rute</option>
-                          <?php
-                          $datasd = $obj->lihatRute();
-                          $no = 1;
-                          if ($datasd->rowCount() > 0) {
-                            if ($sesLvl == 1) {
-                              $dis = "";
-                            } else {
-                              $dis = "disabled";
-                            }
-                            while ($row = $datasd->fetch(PDO::FETCH_ASSOC)) {
-                              $id_rutes = $row['id_rute'];
-                              $pemberangkatans = $row['pemberangkatan'];
-                              $tujuans = $row['tujuan'];
-                          ?>
-                          <option value="<?php echo $id_rutes; ?>"><?php echo $pemberangkatans, " - ", $tujuans; ?>
-                          </option>
-                          <?php
-                            }
-                          }
-                          ?>
-                        </select>
-                      </div>
-                      <div class="form-group">
-                        <label for="InputTglPemberangkatan" class="form-label">Tanggal Pemberangkatan</label>
-                        <input type="date" class="form-control form-control-user2" id="InputTglPemberangkatan"
-                          name="txt_tanggal_pemberangkatan" required
-                          data-parsley-required-message="Data harus di isi !!!" />
+                        <input type="file" name="txt_foto_bus" id="fileInputBus" onchange="previewBusImage(this, 'busPreview')" class="form-control d-none" />
                       </div>
 
+                      <div>
+                        <label class="form-label mb-2">Status Armada</label>
+                        <div class="d-flex gap-2">
+                          <input type="radio" class="btn-check" name="txt_status_bus" id="statusActiveBus" value="Operasional" checked>
+                          <label class="btn btn-outline-success w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="statusActiveBus">
+                            <i class="bx bxs-check-circle fs-5"></i> Operasional
+                          </label>
+                          
+                          <input type="radio" class="btn-check" name="txt_status_bus" id="statusMaintenanceBus" value="Pemeliharaan">
+                          <label class="btn btn-outline-danger w-100 py-2 d-flex align-items-center justify-content-center gap-2" for="statusMaintenanceBus">
+                            <i class="bx bxs-wrench fs-5"></i> Pemeliharaan
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                    <div class="modal-footer">
-                      <button class="btn btn-secondary roundedBtn" type="button" data-bs-dismiss="modal">Batal</button>
-                      <button type="submit" class="btn text-white colorPrimary roundedBtn" name="simpan">Simpan</button>
+
+                    <!-- Right Side (Specifications & Schedule) -->
+                    <div class="col-md-7 d-flex flex-column gap-3">
+                      <div>
+                        <label for="inputNamaBus" class="form-label">Nama Bus</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="bx bx-bus text-muted"></i></span>
+                          <input type="text" class="form-control" id="inputNamaBus" name="txt_nama_bus"
+                            required data-parsley-required-message="Data harus di isi !!!"
+                            placeholder="Ex: Pahala Kencana" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label for="selectJenisBus" class="form-label">Jenis Bus</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="bx bx-category text-muted"></i></span>
+                          <select class="form-select" id="selectJenisBus" aria-label="Pilih jenis bus"
+                            required data-parsley-required-message="Harap pilih data jenis !!!" name="txt_id_jenis">
+                            <option disabled selected value="">Pilih Jenis Bus</option>
+                            <?php
+                            $datas = $obj->lihatJenisBus();
+                            if ($datas->rowCount() > 0) {
+                              while ($rowJenis = $datas->fetch(PDO::FETCH_ASSOC)) {
+                                $id_jeniss = $rowJenis['id_jenis'];
+                                $jeniss = $rowJenis['jenis'];
+                            ?>
+                            <option value="<?php echo $id_jeniss; ?>"><?php echo $jeniss; ?></option>
+                            <?php
+                              }
+                            }
+                            ?>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label for="selectRuteBus" class="form-label">Rute Perjalanan</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="bx bx-map-alt text-muted"></i></span>
+                          <select class="form-select" id="selectRuteBus" aria-label="Pilih rute"
+                            required data-parsley-required-message="Harap pilih data rute !!!" name="txt_id_rute">
+                            <option disabled selected value="">Pilih Rute</option>
+                            <?php
+                            $datasd = $obj->lihatRute();
+                            if ($datasd->rowCount() > 0) {
+                              while ($rowRute = $datasd->fetch(PDO::FETCH_ASSOC)) {
+                                $id_rutes = $rowRute['id_rute'];
+                                $pemberangkatans = $rowRute['pemberangkatan'];
+                                $tujuans = $rowRute['tujuan'];
+                            ?>
+                            <option value="<?php echo $id_rutes; ?>"><?php echo $pemberangkatans . ' - ' . $tujuans; ?>
+                            </option>
+                            <?php
+                              }
+                            }
+                            ?>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="row g-3">
+                        <div class="col-6">
+                          <label for="inputKursiBus" class="form-label">Jumlah Kursi</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="bx bx-chair text-muted"></i></span>
+                            <input type="number" class="form-control" id="inputKursiBus" name="txt_jumlah_kursi"
+                              required data-parsley-required-message="Data harus di isi !!!"
+                              placeholder="Ex: 50" />
+                          </div>
+                        </div>
+                        <div class="col-6">
+                          <label for="inputTarifBus" class="form-label">Tarif Tiket</label>
+                          <div class="input-group">
+                            <span class="input-group-text fw-semibold text-muted">Rp</span>
+                            <input type="number" class="form-control" id="inputTarifBus" required
+                              data-parsley-required-message="Data harus di isi !!!" name="txt_harga"
+                              placeholder="Ex: 50000">
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label for="InputTglPemberangkatanBus" class="form-label">Tanggal Keberangkatan</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="bx bx-calendar text-muted"></i></span>
+                          <input type="date" class="form-control" id="InputTglPemberangkatanBus"
+                            name="txt_tanggal_pemberangkatan" required
+                            data-parsley-required-message="Data harus di isi !!!" />
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </div>
+                <div class="modal-footer p-3 border-top-0 d-flex justify-content-end gap-2">
+                  <button class="btn btn-secondary px-4 py-2" style="border-radius: var(--radius-pill);" type="button" data-bs-dismiss="modal">Batal</button>
+                  <button type="submit" id="btnSubmitBus" class="btn btn-primary px-4 py-2" style="border-radius: var(--radius-pill);" name="simpan">Simpan</button>
                 </div>
               </form>
             </div>
@@ -904,18 +447,320 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </div>
     </div>
   </div>
+
+  <!-- New Section: Bus Fleet Insights & Charts -->
+  <div class="row g-4 m-0 px-4 pb-5">
+    <!-- Chart Card -->
+    <div class="col-lg-7">
+      <div class="card shadow h-100">
+        <div class="card-header shadow rounded d-flex align-items-center justify-content-between">
+          <div class="title d-flex align-items-center gap-2">
+            <i class="bx bx-pie-chart-alt-2 fs-5"></i>
+            <span class="m-0"><b>Distribusi Status & Jenis Bus</b></span>
+          </div>
+        </div>
+        <div class="card-body d-flex flex-column justify-content-center align-items-center" style="min-height: 320px;">
+          <div class="row w-100 align-items-center">
+            <div class="col-md-6 text-center">
+              <h6 class="mb-3 fw-semibold" style="color: var(--color-text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Status Armada</h6>
+              <div id="chartBusStatus"></div>
+            </div>
+            <div class="col-md-6 text-center">
+              <h6 class="mb-3 fw-semibold" style="color: var(--color-text-secondary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Jenis Armada</h6>
+              <div id="chartBusJenis"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Highlights Card -->
+    <div class="col-lg-5">
+      <div class="card shadow h-100">
+        <div class="card-header shadow rounded d-flex align-items-center justify-content-between">
+          <div class="title d-flex align-items-center gap-2">
+            <i class="bx bx-list-check fs-5"></i>
+            <span class="m-0"><b>Ringkasan Detail Armada</b></span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="list-group list-group-flush">
+            <!-- Rata-rata Tarif -->
+            <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3 px-0">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--color-primary-container); color: var(--color-on-primary-container); flex-shrink: 0;">
+                  <i class="bx bxs-wallet fs-5"></i>
+                </div>
+                <div style="line-height: 1.2;">
+                  <h6 class="m-0 fw-semibold" style="color: var(--color-text-primary); font-size: 14px; margin-bottom: 2px;">Rata-rata Tarif</h6>
+                  <small style="color: var(--color-text-secondary); font-size: 11.5px;">Harga tiket rata-rata</small>
+                </div>
+              </div>
+              <span class="badge rounded-pill" style="font-size: 12px; font-weight: 600; padding: 6px 12px; background: var(--color-primary-container); color: var(--color-on-primary-container); border: 1px solid color-mix(in srgb, var(--color-on-primary-container) 15%, transparent);">Rp <?= number_format($averagePrice, 0, ',', '.'); ?></span>
+            </div>
+            
+            <!-- Kapasitas Total -->
+            <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3 px-0">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--color-success-container); color: var(--color-on-success-container); flex-shrink: 0;">
+                  <i class="bx bxs-group fs-5"></i>
+                </div>
+                <div style="line-height: 1.2;">
+                  <h6 class="m-0 fw-semibold" style="color: var(--color-text-primary); font-size: 14px; margin-bottom: 2px;">Kapasitas Total</h6>
+                  <small style="color: var(--color-text-secondary); font-size: 11.5px;">Total kursi semua armada</small>
+                </div>
+              </div>
+              <span class="badge rounded-pill" style="font-size: 12px; font-weight: 600; padding: 6px 12px; background: var(--color-success-container); color: var(--color-on-success-container); border: 1px solid color-mix(in srgb, var(--color-on-success-container) 15%, transparent);"><?= $totalKursi; ?> Kursi</span>
+            </div>
+
+            <!-- Keberangkatan Terdekat -->
+            <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3 px-0">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--color-warning-container); color: var(--color-on-warning-container); flex-shrink: 0;">
+                  <i class="bx bxs-calendar fs-5"></i>
+                </div>
+                <div style="line-height: 1.2;">
+                  <h6 class="m-0 fw-semibold" style="color: var(--color-text-primary); font-size: 14px; margin-bottom: 2px;">Keberangkatan Terdekat</h6>
+                  <small style="color: var(--color-text-secondary); font-size: 11.5px;">Tanggal jalan berikutnya</small>
+                </div>
+              </div>
+              <span class="badge rounded-pill" style="font-size: 12px; font-weight: 600; padding: 6px 12px; background: var(--color-warning-container); color: var(--color-on-warning-container); border: 1px solid color-mix(in srgb, var(--color-on-warning-container) 15%, transparent);"><?= $nextDeparture ? date('d M Y', strtotime($nextDeparture)) : 'Tidak Ada'; ?></span>
+            </div>
+
+            <!-- Rasio Kesiapan -->
+            <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3 px-0">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: var(--color-info-container); color: var(--color-on-info-container); flex-shrink: 0;">
+                  <i class="bx bxs-check-shield fs-5"></i>
+                </div>
+                <div style="line-height: 1.2;">
+                  <h6 class="m-0 fw-semibold" style="color: var(--color-text-primary); font-size: 14px; margin-bottom: 2px;">Rasio Kesiapan</h6>
+                  <small style="color: var(--color-text-secondary); font-size: 11.5px;">Persentase bus siap jalan</small>
+                </div>
+              </div>
+              <span class="badge rounded-pill" style="font-size: 12px; font-weight: 600; padding: 6px 12px; background: var(--color-info-container); color: var(--color-on-info-container); border: 1px solid color-mix(in srgb, var(--color-on-info-container) 15%, transparent);"><?= $totalBus > 0 ? round(($busOperasional / $totalBus) * 100, 1) : 0; ?>% Siap</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <script src="jquery/jquery-3.6.0.min.js"></script>
-  <script src="plugin/js/bootstrap.bundle.min.js"></script>
-  <script src="plugin/jquery-easing/jquery.easing.min.js"></script>
-  <script src="plugin/js/script.js"></script>
-  <script src="plugin/js/calender.js"></script>
+<?php
+$mainContent = ob_get_clean();
+
+ob_start();
+?>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="plugin/datatables/DataTables-1.11.3/js/jquery.dataTables.min.js"></script>
   <script src="plugin/datatables/DataTables-1.11.3/js/dataTables.bootstrap5.min.js"></script>
   <script src="plugin/js/datatables-demo.js"></script>
   <script src="plugin/js/javascript.js"></script>
-  <script src="plugin/js/UpImg.js"></script>
   <script src="plugin/js/parsley.min.js"></script>
-</body>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var rootStyles = getComputedStyle(document.documentElement);
+      var primaryColor = rootStyles.getPropertyValue("--color-primary").trim() || "#527bdd";
+      var successColor = rootStyles.getPropertyValue("--color-success").trim() || "#22c55e";
+      var warningColor = rootStyles.getPropertyValue("--color-warning").trim() || "#facc15";
+      var errorColor = rootStyles.getPropertyValue("--color-error").trim() || "#ef4444";
+      var textColor = rootStyles.getPropertyValue("--color-text-primary").trim() || "#1f264c";
+      var textSecondary = rootStyles.getPropertyValue("--color-text-tertiary").trim() || "#6b7280";
+      
+      // ---- Donut Chart: Status Bus ----
+      var optionsStatus = {
+        series: [<?= $busOperasional; ?>, <?= $busPemeliharaan; ?>],
+        chart: {
+          type: "donut",
+          height: 240,
+          background: "transparent"
+        },
+        labels: ["Operasional", "Pemeliharaan"],
+        colors: [successColor, errorColor],
+        plotOptions: {
+          pie: {
+            donut: {
+              size: "68%",
+              labels: {
+                show: true,
+                name: { show: true, fontSize: "12px", color: textSecondary },
+                value: {
+                  show: true,
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  color: textColor,
+                  formatter: function(val) { return val + " Bus"; }
+                },
+                total: {
+                  show: true,
+                  label: "Total",
+                  fontSize: "11px",
+                  color: textSecondary,
+                  formatter: function(w) {
+                    return w.globals.seriesTotals.reduce(function(a, b) { return a + b; }, 0) + " Bus";
+                  }
+                }
+              }
+            }
+          }
+        },
+        dataLabels: { enabled: false },
+        legend: { position: "bottom", fontSize: "11px", labels: { colors: textSecondary } },
+        stroke: { width: 0 }
+      };
+      var chartStatus = new ApexCharts(document.querySelector("#chartBusStatus"), optionsStatus);
+      chartStatus.render();
 
-</html>
+      // ---- Donut Chart: Jenis Bus ----
+      <?php
+      $labels = [];
+      $counts = [];
+      foreach ($jenisCounts as $jenis => $count) {
+          $labels[] = $jenis;
+          $counts[] = $count;
+      }
+      ?>
+      var optionsJenis = {
+        series: <?= json_encode($counts); ?>,
+        chart: {
+          type: "donut",
+          height: 240,
+          background: "transparent"
+        },
+        labels: <?= json_encode($labels); ?>,
+        colors: [primaryColor, "#f59e0b", "#6366f1", "#06b6d4", "#ec4899"],
+        plotOptions: {
+          pie: {
+            donut: {
+              size: "68%",
+              labels: {
+                show: true,
+                name: { show: true, fontSize: "12px", color: textSecondary },
+                value: {
+                  show: true,
+                  fontSize: "18px",
+                  fontWeight: 700,
+                  color: textColor,
+                  formatter: function(val) { return val + " Bus"; }
+                },
+                total: {
+                  show: true,
+                  label: "Total",
+                  fontSize: "11px",
+                  color: textSecondary,
+                  formatter: function(w) {
+                    return w.globals.seriesTotals.reduce(function(a, b) { return a + b; }, 0) + " Bus";
+                  }
+                }
+              }
+            }
+          }
+        },
+        dataLabels: { enabled: false },
+        legend: { position: "bottom", fontSize: "11px", labels: { colors: textSecondary } },
+        stroke: { width: 0 }
+      };
+      var chartJenis = new ApexCharts(document.querySelector("#chartBusJenis"), optionsJenis);
+      chartJenis.render();
+    });
+
+    function previewBusImage(input, previewId) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          const previewEl = document.getElementById(previewId);
+          previewEl.src = e.target.result;
+          previewEl.closest('.bus-image-upload-wrapper').classList.add('has-image');
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      // Handle Add Bus button click
+      const btnAddBus = document.getElementById('btnAddBus');
+      if(btnAddBus) {
+        btnAddBus.addEventListener('click', function() {
+          document.getElementById('formBus').action = 'tambahBus.php';
+          document.getElementById('modalTitleBus').innerText = 'Tambah Data Bus';
+          document.getElementById('modalIconBus').className = 'bx bx-plus-circle fs-4';
+          document.getElementById('btnSubmitBus').innerText = 'Simpan';
+          document.getElementById('modalFotoLabelBus').innerText = 'Pilih Foto Bus';
+          
+          document.getElementById('inputIdBus').value = '';
+          document.getElementById('inputNamaBus').value = '';
+          document.getElementById('selectJenisBus').value = '';
+          document.getElementById('selectRuteBus').value = '';
+          document.getElementById('inputKursiBus').value = '';
+          document.getElementById('inputTarifBus').value = '';
+          document.getElementById('InputTglPemberangkatanBus').value = '';
+          document.getElementById('statusActiveBus').checked = true;
+          
+          const preview = document.getElementById('busPreview');
+          preview.src = '';
+          preview.closest('.bus-image-upload-wrapper').classList.remove('has-image');
+          document.getElementById('fileInputBus').required = true;
+        });
+      }
+
+      // Handle Edit Bus button click
+      const editButtons = document.querySelectorAll('.btn-edit-bus');
+      editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          document.getElementById('formBus').action = 'editBus.php';
+          document.getElementById('modalTitleBus').innerText = 'Edit Data Bus';
+          document.getElementById('modalIconBus').className = 'bx bxs-edit fs-4';
+          document.getElementById('btnSubmitBus').innerText = 'Update';
+          document.getElementById('modalFotoLabelBus').innerText = 'Ganti Foto Bus';
+          
+          document.getElementById('inputIdBus').value = this.getAttribute('data-id');
+          document.getElementById('inputNamaBus').value = this.getAttribute('data-nama');
+          document.getElementById('selectJenisBus').value = this.getAttribute('data-idjenis');
+          document.getElementById('selectRuteBus').value = this.getAttribute('data-idrute');
+          document.getElementById('inputKursiBus').value = this.getAttribute('data-kursi');
+          document.getElementById('inputTarifBus').value = this.getAttribute('data-harga');
+          document.getElementById('InputTglPemberangkatanBus').value = this.getAttribute('data-tanggal');
+          
+          if(this.getAttribute('data-status') === 'Operasional') {
+             document.getElementById('statusActiveBus').checked = true;
+          } else {
+             document.getElementById('statusMaintenanceBus').checked = true;
+          }
+          
+          const preview = document.getElementById('busPreview');
+          preview.src = 'fotoBus/' + this.getAttribute('data-foto');
+          preview.closest('.bus-image-upload-wrapper').classList.add('has-image');
+          document.getElementById('fileInputBus').required = false; // Foto tidak wajib saat edit
+        });
+      });
+
+      // Handle Delete Bus button click
+      const deleteButtons = document.querySelectorAll('.btn-delete-bus');
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const idBus = this.getAttribute('data-id');
+          const namaBus = this.getAttribute('data-nama');
+          
+          Swal.fire({
+            title: 'Hapus Bus',
+            html: `Apakah Anda yakin ingin menghapus data bus <b>${namaBus}</b>?<br>Perlu hati-hati karena data akan hilang selamanya!`,
+            icon: 'warning',
+            showCancelButton: true,
+            customClass: { confirmButton: 'btn-danger' },
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = `hapusBus.php?id_bus=${idBus}`;
+            }
+          });
+        });
+      });
+    });
+  </script>
+<?php
+$extraJS = ob_get_clean();
+$useUpImg = true;
+require_once('layouts/main_layout.php');
+?>

@@ -48,10 +48,10 @@ if(isset($_POST['simpan'])){
 
   if($obj->insertAdministrator($nama, $jenis_kelamin, $alamat, $no_hp, $foto, $id_level, $id_terminal, $email, $password)){
     echo '<div class="alert alert-success">Data Berhasil Ditambahkan</div>';
-    header("Location: dataAkun.php");
+    header("Location: dataAkunInternal.php");
   } else{
     echo '<div class="alert alert-danger">Data Gagal Ditambahkan</div>';
-    header("Location: dataAkun.php");
+    header("Location: dataAkunInternal.php");
   }
 }
 

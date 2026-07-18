@@ -1,0 +1,525 @@
+/* =============================================================================
+   SI-BOSS — DESIGN TOKENS (theme.css)
+   -----------------------------------------------------------------------------
+   Sumber tunggal untuk semua design token (color, typography, spacing, radius,
+   elevation, motion, z-index).
+
+   Prinsip:
+     1. Palette primitif JANGAN dipakai langsung — selalu lewat semantic token.
+     2. Semantic token menggunakan CSS `light-dark()` sehingga light & dark
+        cukup dideklarasikan sekali. Tema mengikuti `color-scheme`.
+     3. Softening warna dilakukan dengan `color-mix()` (a la Tailwind) — tanpa
+        menambah entri di palette.
+     4. Shadow / elevation memakai pola `hsla(var(--shadow-color)/strength)`.
+        Untuk beralih ke tema gelap cukup override `--shadow-strength-*` sekali.
+
+   Mode tema (kontrol via <html data-theme="...">):
+       (tanpa attr)    → mengikuti preferensi OS   (color-scheme: light dark)
+       data-theme=light → paksa light               (color-scheme: light)
+       data-theme=dark  → paksa dark                (color-scheme: dark)
+   ============================================================================= */
+
+/* =============================================================================
+   1. PRIMITIVE / REFERENCE PALETTE
+   -----------------------------------------------------------------------------
+   Warna mentah (raw palette). JANGAN dipakai langsung di komponen.
+   Selalu pakai semantic token di section berikutnya.
+   ============================================================================= */
+:root {
+  /* Brand Blue (primary) */
+  --blue-50: #f1f5fd; /* background */
+  --blue-100: #e0e9f9; /* background/surface */
+  --blue-200: #c7d8f6; /* border/devider/ring/disabled state soft */
+  --blue-300: #a1bfef; /* border/devider/ring/disabled state strong*/
+  --blue-400: #749de6; /* warna icon */
+  --blue-500: #527bdd; /* PRIMARY */
+  --blue-600: #3f60d1; /* hover/focus */
+  --blue-700: #364ebf; /* active */
+  --blue-800: #31419c; /* text */
+  --blue-900: #1f264c; /* text */
+  --blue-950: #1f264c;
+
+  /* Sky / Info */
+  --sky-50: #eff8ff;
+  --sky-400: #2cbcff;
+  --sky-500: #00a6f4;
+  --sky-700: #006dab;
+
+  /* Yellow / Warning */
+  --yellow-50: #fefce8;
+  --yellow-400: #facc15;
+  --yellow-500: #eab308;
+  --yellow-700: #a16207;
+
+  /* Red / Error */
+  --red-50: #fef2f2;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --red-700: #b91c1c;
+
+  /* Green / Success */
+  --green-50: #f0fdf4;
+  --green-400: #4ade80;
+  --green-500: #22c55e;
+  --green-700: #15803d;
+
+  /* Indigo / Accent */
+  --indigo-50: #eef2ff;
+  --indigo-400: #818cf8;
+  --indigo-500: #6366f1;
+  --indigo-700: #4338ca;
+
+  /* Purple / Accent */
+  --purple-50: #faf5ff;
+  --purple-400: #c084fc;
+  --purple-500: #a855f7;
+  --purple-700: #7e22ce;
+
+  /* Pink / Accent */
+  --pink-50: #fdf2f8;
+  --pink-400: #f472b6; /*dark*/
+  --pink-500: #ec4899;
+  --pink-700: #be185d;
+
+  /* Neutral / Gray */
+  --neutral-0: #ffffff;
+  --neutral-50: #f9fafb; /* background */
+  --neutral-100: #f3f4f6; /* background/surface/container */
+  --neutral-200: #e5e7eb; /* border/devider/ring/disabled state soft */
+  --neutral-300: #d1d5db; /* border/devider/ring/disabled state strong*/
+  --neutral-400: #9ca3af; /* warna icon */
+  --neutral-500: #6b7280; /* SECONDARY */
+  --neutral-600: #4b5563; /* hover/focus */
+  --neutral-700: #374151; /* active */
+  --neutral-800: #1f2937; /* text */
+  --neutral-900: #111827; /* text */
+  --neutral-950: #030712; /* dark */
+  --neutral-1000: #000000;
+}
+
+/* =============================================================================
+   2. COLOR SCHEME  (mode selector untuk light-dark())
+   -----------------------------------------------------------------------------
+   3 mode tema dikontrol lewat attribute `data-theme` di <html>:
+
+     • system  → attribute TIDAK diset (default). Warna mengikuti preferensi OS
+                 lewat @media (prefers-color-scheme: dark).
+     • light   → data-theme="light" — paksa light meski OS gelap.
+     • dark    → data-theme="dark"  — paksa dark meski OS terang.
+
+   ============================================================================= */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Mode SYSTEM saat OS gelap → aktifkan dark */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+  }
+}
+
+/* =============================================================================
+   3. SEMANTIC ROLES
+   -----------------------------------------------------------------------------
+   Pola Material Design 3 dengan CSS `light-dark(lightValue, darkValue)`.
+   Softening dilakukan lewat `color-mix()` — palette tidak diubah.
+  Token mengikuti pola Material Design 3:
+     --color-<role>           → warna latar / permukaan role
+     --color-on-<role>        → warna konten (teks/ikon) di atas role tsb
+     --color-<role>-container → varian container lebih lembut
+     --color-on-<role>-container
+   ============================================================================= */
+:root {
+  /* ------- Primary ------- */
+  --color-primary: var(--blue-500);
+  --color-on-primary: var(--neutral-50);
+  --color-primary-hover: var(--blue-600);
+  --color-primary-active: var(--blue-700);
+  --color-primary-container: light-dark(var(--blue-50), color-mix(in srgb, var(--blue-800) 25%, var(--neutral-950)));
+  --color-on-primary-container: light-dark(var(--blue-900), var(--blue-100));
+
+  /* ------- Secondary ------- */
+  --color-secondary: light-dark(var(--neutral-200), var(--neutral-800));
+  --color-on-secondary: light-dark(var(--neutral-900), var(--neutral-100));
+  --color-secondary-container: light-dark(var(--neutral-100), var(--neutral-900));
+  --color-on-secondary-container: light-dark(var(--neutral-800), var(--neutral-300));
+  --color-secondary-hover: light-dark(var(--neutral-300), var(--neutral-700));
+  --color-secondary-active: light-dark(color-mix(in srgb, var(--neutral-400) 25%, transparent), var(--neutral-600));
+
+  /* ------- Tertiary (yellow accent) ------- */
+  --color-tertiary: light-dark(var(--yellow-400), var(--yellow-500));
+  --color-on-tertiary: light-dark(var(--neutral-800), var(--neutral-900));
+  --color-tertiary-container: light-dark(var(--yellow-50), var(--yellow-700));
+  --color-on-tertiary-container: light-dark(var(--yellow-700), var(--yellow-50));
+
+  /* ------- Surface / Background ------- */
+  --color-background: light-dark(color-mix(in srgb, var(--blue-50) 55%, var(--neutral-0)),var(--neutral-950)); 
+  --color-on-background: light-dark(var(--neutral-900), var(--neutral-100));
+  --color-surface: light-dark(var(--neutral-0), var(--neutral-900));
+  --color-on-surface: light-dark(var(--neutral-800), var(--neutral-100));
+  --color-surface-variant: light-dark(var(--neutral-100), var(--neutral-800));
+  --color-on-surface-variant: light-dark(var(--neutral-500), var(--neutral-300));
+  --color-surface-dim: light-dark(var(--neutral-300), var(--neutral-1000));
+  --color-surface-bright: light-dark(var(--neutral-0), var(--neutral-700));
+
+  /* Skala container (elevasi) */
+  --color-surface-container-lowest: light-dark(var(--neutral-0), var(--neutral-1000));
+  --color-surface-container-low: light-dark(var(--neutral-50), var(--neutral-900));
+  --color-surface-container: light-dark(var(--neutral-100), var(--neutral-800));
+  --color-surface-container-high: light-dark(var(--neutral-200), var(--neutral-700));
+  --color-surface-container-highest: light-dark(var(--neutral-300), var(--neutral-600));
+
+  /* ------- Outline / Border ------- */
+  --color-outline: light-dark(var(--neutral-300), var(--neutral-600));
+  --color-outline-variant: light-dark(var(--neutral-100), var(--neutral-700));
+  --color-divider: light-dark(color-mix(in srgb, var(--neutral-300) 60%, transparent), color-mix(in srgb, var(--neutral-600) 45%, transparent));
+
+  /* ------- Text / Foreground ------- */
+  --color-text-primary: light-dark(var(--blue-900), var(--neutral-100));
+  --color-text-secondary: light-dark(var(--neutral-700), var(--neutral-300));
+  --color-text-tertiary: light-dark(var(--neutral-500), var(--neutral-500));
+  --color-text-disabled: light-dark(var(--neutral-300), var(--neutral-600));
+  --color-text-placeholder: light-dark(var(--neutral-400), var(--neutral-500));
+  --color-text-inverse: light-dark(var(--neutral-0), var(--neutral-900));
+  --color-text-link: light-dark(var(--blue-500), var(--blue-300));
+  --color-text-link-hover: light-dark(var(--blue-600), var(--blue-200));
+
+  /* ------- Semantic (status) ------- */
+  --color-success: light-dark(var(--green-500), var(--green-400));
+  --color-on-success: light-dark(var(--neutral-0), var(--neutral-900));
+  --color-success-container: light-dark(var(--green-50), var(--green-700));
+  --color-on-success-container: light-dark(var(--green-700), var(--green-50));
+
+  --color-warning: light-dark(var(--yellow-400), var(--yellow-400));
+  --color-on-warning: light-dark(var(--neutral-800), var(--neutral-900));
+  --color-warning-container: light-dark(var(--yellow-50), var(--yellow-700));
+  --color-on-warning-container: light-dark(var(--yellow-700), var(--yellow-50));
+
+  --color-error: light-dark(var(--red-500), var(--red-400));
+  --color-on-error: light-dark(var(--neutral-0), var(--neutral-900));
+  --color-error-container: light-dark(var(--red-50), var(--red-700));
+  --color-on-error-container: light-dark(var(--red-700), var(--red-50));
+
+  --color-info: light-dark(var(--blue-500), var(--blue-400));
+  --color-on-info: light-dark(var(--neutral-0), var(--neutral-900));
+  --color-info-container: light-dark(var(--blue-50), var(--blue-800));
+  --color-on-info-container: light-dark(var(--blue-900), var(--blue-50));
+
+  /* ------- Interactive States ------- */
+  --state-hover-opacity: 0.08;
+  --state-focus-opacity: 0.12;
+  --state-pressed-opacity: 0.16;
+  --state-disabled-opacity: 0.38;
+
+  --color-focus-ring: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  --color-hover-overlay: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --color-pressed-overlay: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --color-disabled-bg: light-dark(var(--neutral-200), var(--neutral-800));
+  --color-disabled-fg: light-dark(var(--neutral-400), var(--neutral-500));
+
+  /* ------- Scrollbar ------- */
+  --color-scrollbar-thumb: light-dark(var(--neutral-400), var(--neutral-600));
+  --color-scrollbar-thumb-hover: var(--color-primary);
+  --color-scrollbar-track: light-dark(var(--neutral-200), var(--neutral-800));
+
+  /* ------- Gradients ------- */
+  --gradient-primary: linear-gradient(
+    109.6deg,
+    light-dark(var(--blue-500), var(--blue-600)) 10.2%,
+    light-dark(var(--blue-400), var(--blue-500)) 100%
+  );
+  --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --gradient-pink: linear-gradient(135deg, #f43f5e 0%, #db2777 100%);
+  --gradient-yellow: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  --gradient-green: linear-gradient(135deg, #10b981 0%, #07895b 100%);
+  --gradient-indigo: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+  --gradient-teal: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  --gradient-auth: linear-gradient(
+    160deg,
+    var(--blue-600) 0%,
+    var(--blue-500) 55%,
+    var(--blue-400) 100%
+  );
+}
+
+/* =============================================================================
+   4. TYPOGRAPHY
+   -----------------------------------------------------------------------------
+   Font family, ukuran, weight, line-height, dan letter-spacing.
+   ============================================================================= */
+:root {
+  /* Font families */
+  --font-family-base: "Roboto-Regular", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-family-medium: "Roboto-Medium", "Segoe UI", system-ui, sans-serif;
+  --font-family-bold: "Roboto-Bold", "Segoe UI", system-ui, sans-serif;
+  --font-family-light: "Roboto-Light", "Segoe UI", system-ui, sans-serif;
+  --font-family-display: "Poppins-Bold", "Segoe UI", system-ui, sans-serif;
+  --font-family-heading: "Poppins-Medium", "Segoe UI", system-ui, sans-serif;
+  --font-family-poppins: "Poppins-Regular", "Segoe UI", system-ui, sans-serif;
+  --font-family-accent: "Pacifico", cursive;
+  --font-family-script: "Italianno", cursive;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Font size scale (rem-based, root = 14px preserved) */
+  --font-size-2xs: 0.625rem; /* 10 px */
+  --font-size-xs: 0.75rem; /* 12 px */
+  --font-size-sm: 0.8125rem; /* 13 px */
+  --font-size-md: 0.875rem; /* 14 px — BASE */
+  --font-size-base: 0.875rem; /* alias */
+  --font-size-lg: 1rem; /* 16 px */
+  --font-size-xl: 1.125rem; /* 18 px */
+  --font-size-2xl: 1.25rem; /* 20 px */
+  --font-size-3xl: 1.375rem; /* 22 px */
+  --font-size-4xl: 1.5rem; /* 24 px */
+  --font-size-5xl: 1.625rem; /* 26 px */
+  --font-size-6xl: 2rem; /* 32 px */
+
+  /* Font weight */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line height */
+  --line-height-none: 1;
+  --line-height-tight: 1.15;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+  --line-height-loose: 2;
+
+  /* Letter spacing */
+  --letter-spacing-tighter: -0.02em;
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+  --letter-spacing-wider: 0.04em;
+  --letter-spacing-widest: 0.08em;
+
+  /* Semantic typography roles */
+  --typography-display-family: var(--font-family-display);
+  --typography-display-size: var(--font-size-5xl);
+  --typography-display-weight: var(--font-weight-bold);
+  --typography-display-lh: var(--line-height-tight);
+
+  --typography-headline-family: var(--font-family-bold);
+  --typography-headline-size: var(--font-size-4xl);
+  --typography-headline-weight: var(--font-weight-bold);
+  --typography-headline-lh: var(--line-height-tight);
+
+  --typography-title-family: var(--font-family-medium);
+  --typography-title-size: var(--font-size-lg);
+  --typography-title-weight: var(--font-weight-medium);
+  --typography-title-lh: var(--line-height-snug);
+
+  --typography-body-family: var(--font-family-base);
+  --typography-body-size: var(--font-size-md);
+  --typography-body-weight: var(--font-weight-regular);
+  --typography-body-lh: var(--line-height-normal);
+
+  --typography-label-family: var(--font-family-medium);
+  --typography-label-size: var(--font-size-xs);
+  --typography-label-weight: var(--font-weight-medium);
+  --typography-label-lh: var(--line-height-snug);
+
+  --typography-caption-family: var(--font-family-base);
+  --typography-caption-size: var(--font-size-2xs);
+  --typography-caption-weight: var(--font-weight-regular);
+  --typography-caption-lh: var(--line-height-normal);
+}
+
+/* =============================================================================
+   5. SPACING (margin & padding scale)
+   -----------------------------------------------------------------------------
+   Skala 4-point grid (kelipatan 4px). Gunakan sebagai var(--space-N).
+   ============================================================================= */
+:root {
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4  px */
+  --space-2: 0.5rem; /* 8  px */
+  --space-3: 0.75rem; /* 12 px */
+  --space-4: 1rem; /* 16 px */
+  --space-5: 1.25rem; /* 20 px */
+  --space-6: 1.5rem; /* 24 px */
+  --space-7: 1.75rem; /* 28 px */
+  --space-8: 2rem; /* 32 px */
+  --space-9: 2.25rem; /* 36 px */
+  --space-10: 2.5rem; /* 40 px */
+  --space-12: 3rem; /* 48 px */
+  --space-14: 3.5rem; /* 56 px */
+  --space-16: 4rem; /* 64 px */
+  --space-20: 5rem; /* 80 px */
+  --space-24: 6rem; /* 96 px */
+
+  /* Semantic spacing aliases */
+  --spacing-xs: var(--space-1);
+  --spacing-sm: var(--space-2);
+  --spacing-md: var(--space-4);
+  --spacing-lg: var(--space-6);
+  --spacing-xl: var(--space-8);
+  --spacing-2xl: var(--space-12);
+  --spacing-3xl: var(--space-16);
+
+  /* Layout dimensions (specific to app shell) */
+  --layout-sidebar-width: 210px;
+  --layout-sidebar-collapsed: 78px;
+  --layout-navbar-height: 60px;
+  --layout-content-offset-top: 80px;
+  --layout-max-content-width: 1400px;
+}
+
+/* =============================================================================
+   6. BORDER RADIUS
+   ============================================================================= */
+:root {
+  --radius-none: 0;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+  --radius-pill: 30px;
+  --radius-full: 9999px;
+  --radius-circle: 50%;
+}
+
+/* =============================================================================
+   7. ELEVATION / SHADOW
+   -----------------------------------------------------------------------------
+   Level 0–5 mengikuti pola Material elevation. Semua shadow diturunkan dari
+   pola tunggal `hsla(var(--shadow-color) / var(--shadow-strength-N))` sehingga
+   untuk beralih ke dark mode cukup override --shadow-strength-* satu kali.
+
+   `--shadow-panel-accent` sengaja dipertahankan sebagai varian dengan
+   inset garis kuning (dipakai di card auth). Warna inset otomatis mengikuti
+   token --color-tertiary yang sudah adaptif.
+   ============================================================================= */
+:root {
+  --shadow-color: 0 0% 0%;
+  --shadow-strength-1: 0.04;
+  --shadow-strength-2: 0.08;
+  --shadow-strength-3: 0.14;
+  --shadow-strength-4: 0.24;
+  --shadow-strength-5: 0.34;
+
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px hsla(var(--shadow-color) / var(--shadow-strength-1));
+  --elevation-2: 0 2px 6px hsla(var(--shadow-color) / var(--shadow-strength-2));
+  --elevation-3: 0 4px 12px hsla(var(--shadow-color) / var(--shadow-strength-3));
+  --elevation-4: 0 8px 20px hsla(var(--shadow-color) / var(--shadow-strength-4));
+  --elevation-5: 0 12px 40px hsla(var(--shadow-color) / var(--shadow-strength-5));
+
+  /* Semantic shadow aliases — semua sudah adaptif via --shadow-strength-* */
+  --shadow-card: var(--elevation-2);
+  --shadow-panel: 0 2px 12px hsla(var(--shadow-color) / var(--shadow-strength-3));
+  --shadow-panel-accent: var(--shadow-panel), inset 0 -5px 1px var(--color-tertiary);
+  --shadow-button: 0 2px 5px hsla(var(--shadow-color) / var(--shadow-strength-3));
+  --shadow-button-lg: 0 2px 8px hsla(var(--shadow-color) / var(--shadow-strength-4));
+  --shadow-nav: 0 1px 15px hsla(var(--shadow-color) / var(--shadow-strength-1));
+  --shadow-modal: 0 12px 40px hsla(var(--shadow-color) / var(--shadow-strength-4));
+  --shadow-focus: 0 0 0 3px var(--color-focus-ring);
+  --shadow-inset-focus: 0 1px 1px hsla(var(--shadow-color) / var(--shadow-strength-2)) inset,
+    0 0 4px var(--color-primary);
+}
+
+/* Dark mode: naikkan intensitas shadow supaya masih terbaca di bg gelap.
+   Karena semua shadow di atas memakai --shadow-strength-*, tidak perlu
+   redeklarasi. Diterapkan pada mode paksa (data-theme=dark) MAUPUN mode
+   sistem gelap (prefers-color-scheme: dark tanpa data-theme). */
+:root[data-theme="dark"] {
+  --shadow-strength-1: 0.24;
+  --shadow-strength-2: 0.36;
+  --shadow-strength-3: 0.48;
+  --shadow-strength-4: 0.6;
+  --shadow-strength-5: 0.72;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --shadow-strength-1: 0.24;
+    --shadow-strength-2: 0.36;
+    --shadow-strength-3: 0.48;
+    --shadow-strength-4: 0.6;
+    --shadow-strength-5: 0.72;
+  }
+}
+
+/* =============================================================================
+   8. Z-INDEX SCALE
+   -----------------------------------------------------------------------------
+   Kelas hierarki untuk semua elemen berlapis. JANGAN pakai angka acak.
+   ============================================================================= */
+:root {
+  --z-hide: -1;
+  --z-base: 0;
+  --z-docked: 10;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-banner: 1200;
+  --z-overlay: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-skiplink: 1600;
+  --z-toast: 1700;
+  --z-tooltip: 1800;
+
+  /* Aplikasi-spesifik (menyesuaikan struktur existing) */
+  --z-sidebar: 100;
+  --z-navbar: 999;
+  --z-menu-toggle: 1000;
+  --z-alert: 9999;
+}
+
+/* =============================================================================
+   9. MOTION / TRANSITION
+   ============================================================================= */
+:root {
+  --motion-duration-instant: 0ms;
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 250ms;
+  --motion-duration-slow: 400ms;
+  --motion-duration-slower: 600ms;
+  --motion-duration-slowest: 1000ms;
+
+  --motion-easing-linear: linear;
+  --motion-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --motion-easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  --motion-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --motion-easing-in-out: ease-in-out;
+
+  --transition-fast: var(--motion-duration-fast) var(--motion-easing-standard);
+  --transition-base: var(--motion-duration-normal) var(--motion-easing-standard);
+  --transition-slow: var(--motion-duration-slow) var(--motion-easing-in-out);
+  --transition-sidebar: 500ms var(--motion-easing-in-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-fast: 0ms;
+    --motion-duration-normal: 0ms;
+    --motion-duration-slow: 0ms;
+    --motion-duration-slower: 0ms;
+    --motion-duration-slowest: 0ms;
+  }
+}
+
+/* =============================================================================
+   10. BREAKPOINTS (dokumentasi — dipakai via @media di style.css)
+   -----------------------------------------------------------------------------
+   xs:  < 480px    (mobile)
+   sm:  ≥ 528px
+   md:  ≥ 680px
+   lg:  ≥ 768px    (tablet)
+   xl:  ≥ 992px    (small desktop)
+   2xl: ≥ 1200px   (desktop)
+   ============================================================================= */

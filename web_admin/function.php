@@ -93,16 +93,36 @@ if (isset($_POST['login'])) {
 					$cookie_time = time() + 1800; //30 menit
 					setcookie($cookie_name, $cookie_value, $cookie_time, "/");
 				}
+				$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+				if ($isAjax) {
+					echo json_encode(['status' => 'success', 'redirect' => 'dashboard.php']);
+					exit;
+				}
 				header('Location: dashboard.php');
 			} else {
+				$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+				if ($isAjax) {
+					echo json_encode(['status' => 'error', 'info' => 'statusErrorPass']);
+					exit;
+				}
 				$_SESSION['info'] = 'statusErrorPass';
 				header('Location: index.php');
 			}
 		} else {
+			$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+			if ($isAjax) {
+				echo json_encode(['status' => 'error', 'info' => 'statusNotFound']);
+				exit;
+			}
 			$_SESSION['info'] = 'statusNotFound';
 			header('Location: index.php');
 		}
 	} else {
+		$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+		if ($isAjax) {
+			echo json_encode(['status' => 'error', 'info' => 'statusEmpty']);
+			exit;
+		}
 		$_SESSION['info'] = 'statusEmpty';
 		header('Location: index.php');
 	}
@@ -121,12 +141,28 @@ if (isset($_POST['daftar'])) {
 	$password = $_POST['txt_password'];
 	$data = $obj->ValidasiEmail($email);
   if ($data->rowCount() > 0) {
+    $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+    if ($isAjax) {
+      echo json_encode(['status' => 'error', 'info' => 'EmailHasBeenTaken']);
+      exit;
+    }
     $_SESSION['info'] = 'EmailHasBeenTaken';
     header('Location: registrasi.php');
   }else if ($obj->insertAdministrato($nama, $jenis_kelamin, $alamat, $no_hp, $level, $id_terminal, $email, $password)) {
+			$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+			if ($isAjax) {
+				$_SESSION['info'] = 'statusSignUp';
+				echo json_encode(['status' => 'success', 'redirect' => 'index.php']);
+				exit;
+			}
 			$_SESSION['info'] = 'statusSignUp';
 			header('Location: index.php');
 		} else {
+			$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+			if ($isAjax) {
+				echo json_encode(['status' => 'error', 'info' => 'error']);
+				exit;
+			}
 			$_SESSION['info'] = 'error';
 			header('Location: registrasi.php');
 		}

@@ -1,27 +1,28 @@
-// Call the dataTables jQuery plugin
-$(document).ready(function () {
-  $('[data-bs-toggle="tooltip"]').tooltip();
-  var checebox = $('table tbody input[type=checkbox]');
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+    bootstrap.Tooltip.getOrCreateInstance(element);
+  });
 
-  $(".selectAll").click(function () 
-  {
-    if (this.checked) 
-    {
-      checebox.each(function () 
-      {
-        this.checked = true;
-      });
-    } else {
-      checebox.each(function () {
-        this.checked = false;
-      });
+  document.querySelectorAll(".selectAll").forEach(function (selectAll) {
+    var table = selectAll.closest("table");
+    if (!table) {
+      return;
     }
+
+    var checkboxes = table.querySelectorAll("tbody input[type=checkbox]");
+
+    selectAll.addEventListener("change", function () {
+      checkboxes.forEach(function (checkbox) {
+        checkbox.checked = selectAll.checked;
+      });
+    });
+
+    checkboxes.forEach(function (checkbox) {
+      checkbox.addEventListener("change", function () {
+        if (!checkbox.checked) {
+          selectAll.checked = false;
+        }
+      });
+    });
   });
-  checkbox.click(function () 
-  {
-    if (this.checked) 
-    {
-      $("selectAll").prop("checked", false);
-    }
-  });
-})
+});

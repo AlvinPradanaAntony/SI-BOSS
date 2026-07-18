@@ -25,7 +25,7 @@ class crud extends koneksi {
     }
 
     public function lihatAdministrator(){
-        $sql = "SELECT * FROM administrator JOIN level ON administrator.id_level=level.id_level JOIN terminal ON administrator.id_terminal=terminal.id_terminal";
+        $sql = "SELECT *, administrator.created_at AS created_at, administrator.updated_at AS updated_at FROM administrator JOIN level ON administrator.id_level=level.id_level JOIN terminal ON administrator.id_terminal=terminal.id_terminal";
         $result = $this->koneksi->prepare($sql);
         $result->execute();
         return $result;
@@ -39,7 +39,7 @@ class crud extends koneksi {
     }
 
     public function lihatBus(){
-        $sql = "SELECT id_bus, foto_bus, nama_bus, harga, status_bus, jumlah_kursi, tanggal_pemberangkatan, jenis, fasilitas, u1.nama_terminal pemberangkatan, u2.nama_terminal tujuan, waktu_berangkat, waktu_tiba FROM bus JOIN jenis_bus ON bus.id_jenis=jenis_bus.id_jenis JOIN rute ON bus.id_rute=rute.id_rute JOIN terminal u1 ON rute.pemberangkatan=u1.id_terminal JOIN terminal u2 ON rute.tujuan=u2.id_terminal ORDER BY bus.id_bus ASC";
+        $sql = "SELECT bus.id_bus, bus.id_jenis, bus.id_rute, foto_bus, nama_bus, harga, status_bus, jumlah_kursi, tanggal_pemberangkatan, jenis, fasilitas, u1.nama_terminal pemberangkatan, u2.nama_terminal tujuan, waktu_berangkat, waktu_tiba, bus.created_at, bus.updated_at FROM bus JOIN jenis_bus ON bus.id_jenis=jenis_bus.id_jenis JOIN rute ON bus.id_rute=rute.id_rute JOIN terminal u1 ON rute.pemberangkatan=u1.id_terminal JOIN terminal u2 ON rute.tujuan=u2.id_terminal ORDER BY bus.id_bus ASC";
         $result = $this->koneksi->prepare($sql);
         $result->execute();
         return $result;
@@ -60,7 +60,7 @@ class crud extends koneksi {
     }
 
     public function lihatRute(){
-        $sql = "SELECT id_rute, u1.nama_terminal pemberangkatan, u2.nama_terminal tujuan, waktu_berangkat, waktu_tiba FROM rute JOIN terminal u1 ON rute.pemberangkatan=u1.id_terminal JOIN terminal u2 ON rute.tujuan=u2.id_terminal ORDER BY rute.id_rute ASC";
+        $sql = "SELECT id_rute, u1.nama_terminal pemberangkatan, u2.nama_terminal tujuan, waktu_berangkat, waktu_tiba, rute.created_at, rute.updated_at FROM rute JOIN terminal u1 ON rute.pemberangkatan=u1.id_terminal JOIN terminal u2 ON rute.tujuan=u2.id_terminal ORDER BY rute.id_rute ASC";
         $result = $this->koneksi->prepare($sql);
         $result->execute();
         return $result;
@@ -74,14 +74,14 @@ class crud extends koneksi {
     }
 
     public function lihatPemesanan(){
-        $sql = "SELECT * FROM tiket JOIN pemesanan ON tiket.id_pemesanan=pemesanan.id_pemesanan JOIN penumpang ON tiket.nik_penumpang=penumpang.nik_penumpang JOIN user ON pemesanan.nik_user=user.nik_user JOIN bus ON pemesanan.id_bus=bus.id_bus";
+        $sql = "SELECT *, pemesanan.created_at AS created_at, pemesanan.updated_at AS updated_at FROM tiket JOIN pemesanan ON tiket.id_pemesanan=pemesanan.id_pemesanan JOIN penumpang ON tiket.nik_penumpang=penumpang.nik_penumpang JOIN user ON pemesanan.nik_user=user.nik_user JOIN bus ON pemesanan.id_bus=bus.id_bus";
         $result = $this->koneksi->prepare($sql);
         $result->execute();
         return $result;
     }
 
     public function lihatLaporan($tanggal_mulai, $tanggal_selesai){
-        $sql = "SELECT * FROM tiket JOIN pemesanan ON tiket.id_pemesanan=pemesanan.id_pemesanan JOIN penumpang ON tiket.nik_penumpang=penumpang.nik_penumpang JOIN user ON pemesanan.nik_user=user.nik_user JOIN bus ON pemesanan.id_bus=bus.id_bus WHERE waktu_pemesanan BETWEEN '$tanggal_mulai' AND '$tanggal_selesai'";
+        $sql = "SELECT *, pemesanan.created_at AS created_at, pemesanan.updated_at AS updated_at FROM tiket JOIN pemesanan ON tiket.id_pemesanan=pemesanan.id_pemesanan JOIN penumpang ON tiket.nik_penumpang=penumpang.nik_penumpang JOIN user ON pemesanan.nik_user=user.nik_user JOIN bus ON pemesanan.id_bus=bus.id_bus WHERE waktu_pemesanan BETWEEN '$tanggal_mulai' AND '$tanggal_selesai'";
         $result = $this->koneksi->prepare($sql);
         $result->execute();
         return $result;
@@ -477,6 +477,33 @@ class crud extends koneksi {
             echo $e->getMessage();
         }
     }
+
+    public function detailPemesananLengkap($data){
+        try{
+            $sql = "SELECT *, 
+                           u1.nama_terminal AS terminal_asal, 
+                           u2.nama_terminal AS terminal_tujuan,
+                           pemesanan.created_at AS created_at, 
+                           pemesanan.updated_at AS updated_at 
+                    FROM tiket 
+                    JOIN pemesanan ON tiket.id_pemesanan=pemesanan.id_pemesanan 
+                    JOIN penumpang ON tiket.nik_penumpang=penumpang.nik_penumpang 
+                    JOIN user ON pemesanan.nik_user=user.nik_user 
+                    JOIN bus ON pemesanan.id_bus=bus.id_bus 
+                    JOIN jenis_bus ON bus.id_jenis=jenis_bus.id_jenis
+                    JOIN rute ON bus.id_rute=rute.id_rute 
+                    JOIN terminal u1 ON rute.pemberangkatan=u1.id_terminal 
+                    JOIN terminal u2 ON rute.tujuan=u2.id_terminal 
+                    WHERE pemesanan.id_pemesanan=:id_pemesanan";
+            $result = $this->koneksi->prepare($sql);
+            $result->bindParam(":id_pemesanan", $data);
+            $result->execute();
+            return $result;
+        } catch (PDOException $e){
+            echo $e->getMessage();
+        }
+    }
+
 
     public function detailTiket($data){
         try{

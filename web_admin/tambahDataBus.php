@@ -37,14 +37,16 @@ if(isset ($_POST['submit'])){
 <!DOCTYPE html>
 <html lang="en">
   <head>
+  <script src="js/theme-init.js"></script>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - SI BOSS</title>
     <link rel="stylesheet" href="plugin/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="plugin/font/stylesheet.css" />
-    <link rel="stylesheet" href="plugin/fontawesome-free/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -55,7 +57,7 @@ if(isset ($_POST['submit'])){
     <div class="sidebar">
       <!-- Logo -->
       <div class="logo-details">
-        <i class="fas fa-bus"></i>
+        <i class="bx bxs-bus"></i>
         <span class="logo_name">SI-BOSS<span class="logo_nameMin">Express</span></span>
       </div>
 
@@ -69,7 +71,6 @@ if(isset ($_POST['submit'])){
               <img class="ico" src="img/ico/icoDash_Fill.png" alt="logo1" data-bs-toggle="collapse" data-bs-target="#dashboard" aria-expanded="false" aria-controls="dashboard" />
             </div>
             <span class="link_name">Dashboard</span>
-            <i class="bx bxs-chevron-right arrow" data-bs-toggle="collapse" data-bs-target="#dashboard" aria-expanded="false" aria-controls="dashboard"></i>
           </a>
           <div id="dashboard" class="collapse">
             <ul class="sub-menu">
@@ -88,7 +89,6 @@ if(isset ($_POST['submit'])){
               <img class="ico2" src="img/ico/icoData_noFill.png" alt="logo2" data-bs-toggle="collapse" data-bs-target="#SumberData" aria-expanded="false" aria-controls="SumberData" />
             </div>
             <span class="link_name">Sumber Data</span>
-            <i class="bx bxs-chevron-right arrow" data-bs-toggle="collapse" data-bs-target="#SumberData" aria-expanded="false" aria-controls="SumberData"></i>
           </a>
           <div id="SumberData" class="collapse">
             <ul class="sub-menu">
@@ -174,7 +174,7 @@ if(isset ($_POST['submit'])){
               </div>
               <div class="job">Staff</div>
             </div>
-            <i class="bx bx-log-out"></i>
+            <a class="logout-btn" href="logout.php" title="Keluar"><i class="bx bx-log-out"></i></a>
           </div>
         </li>
       </ul>
@@ -184,35 +184,43 @@ if(isset ($_POST['submit'])){
     <div class="home-section">
       <div class="home-content d-flex justify-content-end align-items-center mb-4">
         <div class="menu">
-          <i class="fas fa-bars"></i>
+          <i class="bx bx-menu sidebar-toggle"></i>
         </div>
         <nav class="custNav">
           <ul class="nav">
+            <li class="nav-item d-flex align-items-center" style="margin-right: 15px;">
+              <div class="theme-switcher" data-active="system">
+                <div class="theme-pill"></div>
+                <button type="button" class="theme-btn" data-theme-value="light" title="Light Mode"><i class="bx bx-sun"></i></button>
+                <button type="button" class="theme-btn" data-theme-value="system" title="System Mode"><i class="bx bx-desktop"></i></button>
+                <button type="button" class="theme-btn" data-theme-value="dark" title="Dark Mode"><i class="bx bx-moon"></i></button>
+              </div>
+            </li>
             <li class="nav-item">
               <a href="#" class="nav-link transition">
-                <i class="far fa-bell"></i>
+                <i class="bx bx-bell"></i>
                 <span class="badge alert-danger p-1">5</span>
               </a>
             </li>
 
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" id="dropdownProfile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <span class="RobotoReg14"><?php echo $sesName;?></span>
+                <span class="me-3"><?php echo $sesName;?></span>
                 <img class="img-profile rounded-circle" src="img/bis.png" alt="LogoBis" />
               </a>
 
               <ul class="dropdown-menu border-0 dropdown-menu-end shadow" aria-labelledby="dropdownProfile">
                 <li>
-                  <a class="dropdown-item" href="#"> <i class="las la-user mr-2"></i> My Profile </a>
+                  <a class="dropdown-item" href="#"> <i class="las la-user me-2"></i> My Profile </a>
                 </li>
                 <li>
-                  <a class="dropdown-item" href="#"> <i class="las la-list-alt mr-2"></i> Activity Log </a>
+                  <a class="dropdown-item" href="#"> <i class="las la-list-alt me-2"></i> Activity Log </a>
                 </li>
                 <li>
                   <div class="dropdown-divider"></div>
                 </li>
                 <li>
-                  <a class="dropdown-item" href="logout.php"> <i class="las la-sign-out-alt mr-2"></i> Sign Out </a>
+                  <a class="dropdown-item" href="logout.php"> <i class="las la-sign-out-alt me-2"></i> Sign Out </a>
                 </li>
               </ul>
             </li>
@@ -221,15 +229,15 @@ if(isset ($_POST['submit'])){
       </div>
 
       <!-- Content Row -->
-      <div class="row m-0 px-3 rowCustom">
+      <div class="row m-0 px-3 pt-navbar">
         <!-- Card Total Data Bus -->
         <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-0 gradientBlue shadow h-100 py-2 rounded">
+          <div class="card border-0 bg-gradient-blue shadow h-100 py-2">
             <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="RobotoReg14 text-white">Data Bus</div>
-                  <div class="RobotoBold18 text-white">5 <span>Bus</span></div>
+              <div class="row g-0 align-items-center">
+                <div class="col me-2">
+                  <div class="text-white-50 small mb-1">Data Bus</div>
+                  <div class="fs-5 fw-bold text-white">5 <span>Bus</span></div>
                 </div>
                 <div class="col-auto">
                   <img src="img/ico/icons8_Shuttle_bus_50px.png" alt="logoBus" />
@@ -241,12 +249,12 @@ if(isset ($_POST['submit'])){
 
         <!-- Card Total Data Driver -->
         <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-0 gradientPink shadow h-100 py-2 rounded">
+          <div class="card border-0 bg-gradient-pink shadow h-100 py-2">
             <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="RobotoReg14 text-white">Data Driver</div>
-                  <div class="RobotoBold18 text-white">(Belum Tersedia)</div>
+              <div class="row g-0 align-items-center">
+                <div class="col me-2">
+                  <div class="text-white-50 small mb-1">Data Driver</div>
+                  <div class="fs-5 fw-bold text-white">(Belum Tersedia)</div>
                 </div>
                 <div class="col-auto">
                   <img src="img/ico/icons8_driver_50px.png" alt="logoDriver" />
@@ -258,12 +266,12 @@ if(isset ($_POST['submit'])){
 
         <!-- Card Total Data Pemesanan -->
         <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-0 gradientYellow shadow h-100 py-2 rounded">
+          <div class="card border-0 bg-gradient-yellow shadow h-100 py-2">
             <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="RobotoReg14 text-white">Data Pemesanan</div>
-                  <div class="RobotoBold18 text-white">20 Pesanan</div>
+              <div class="row g-0 align-items-center">
+                <div class="col me-2">
+                  <div class="text-white-50 small mb-1">Data Pemesanan</div>
+                  <div class="fs-5 fw-bold text-white">20 Pesanan</div>
                 </div>
                 <div class="col-auto">
                   <img src="img/ico/icons8_bus_tickets_50px.png" alt="logoTicket" />
@@ -275,12 +283,12 @@ if(isset ($_POST['submit'])){
 
         <!-- Card Total Data Penghasilan -->
         <div class="col-xl-3 col-md-6 mb-4">
-          <div class="card border-0 gradientGreen shadow h-100 py-2 rounded">
+          <div class="card border-0 bg-gradient-green shadow h-100 py-2">
             <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div class="RobotoReg14 text-white">Total Penghasilan</div>
-                  <div class="RobotoBold18 text-white"><span>Rp</span>4.125.000</div>
+              <div class="row g-0 align-items-center">
+                <div class="col me-2">
+                  <div class="text-white-50 small mb-1">Total Penghasilan</div>
+                  <div class="fs-5 fw-bold text-white"><span>Rp</span>4.125.000</div>
                 </div>
                 <div class="col-auto">
                   <img src="img/ico/icons8_add_dollar_45px.png" alt="logoPay" />
@@ -295,23 +303,21 @@ if(isset ($_POST['submit'])){
       <div class="row g-2 m-0 px-4">
         <div class="col-lg-12">
           <div class="card shadow mb-4 rounded">
-            <div class="card-header shadow rounded">
-              <div class="title float-start">
-                <a href="dataBus.php">
-                  <button class="btn text-white m-0 p-0 me-2"><i class="fas fa-arrow-alt-circle-left fa-lg" data-bs-toggle="tooltip" title="Kembali"></i></button>
-                </a>
-                <span class="m-0"><b>Tambah Data Bus</b></span>
-              </div>
+            <div class="card-header d-flex align-items-center py-3">
+              <a href="dataBus.php" class="btn text-white p-0 me-2" aria-label="Kembali">
+                <i class="bx bx-arrow-back" data-bs-toggle="tooltip" title="Kembali"></i>
+              </a>
+              <h5 class="m-0 font-weight-bold text-white">Tambah Data Bus</h5>
             </div>
             <div class="card-body">
               <form action="login.php" method="POST">
                 <div class="row">
                   <div class="col-md-6">
-                    <div class="form-group" hidden>
+                    <div class="mb-3" hidden>
                       <label for="InputId" class="form-label">Id</label>
-                      <input type="text" class="form-control form-control-user2" id="InputId" name="txt_id" placeholder="" />
+                      <input type="text" class="form-control" id="InputId" name="txt_id" placeholder="" />
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputFotoBus" class="form-label">Foto Bus</label>
                       <div class="img-div">
                         <div class="img-placeholder" onClick="triggerClick()">
@@ -322,20 +328,20 @@ if(isset ($_POST['submit'])){
                       <input type="file" name="profileImage" onChange="displayImage(this)" id="profileImage" class="form-control" style="display: none" />
                       <a href="#" class="float-end view text-secondary"> Lihat Foto </a>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputNamaBus" class="form-label">Nama Bus</label>
-                      <input type="text" class="form-control form-control-user2" id="InputNamaBus" name="txt_NamaBus" placeholder="" />
+                      <input type="text" class="form-control" id="InputNamaBus" name="txt_NamaBus" placeholder="" />
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputJenisBus" class="form-label">Jenis Bus</label>
-                      <select class="form-select form-select-user" aria-label=".form-select-sm example" name="InputJenisBus">
+                      <select class="form-select" aria-label="Pilih Jenis Bus" name="InputJenisBus">
                         <option disabled selected>Pilih Jenis Bus</option>
                         <option value="Ekonomi">Ekonomi</option>
                         <option value="Eksekutif">Eksekutif</option>
                         <option value="Pariwisata">Pariwisata</option>
                       </select>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputFasilitasBus" class="form-label">Fasilitas Bus</label>
                       <div class="row">
                         <div class="col-sm-2">
@@ -364,7 +370,7 @@ if(isset ($_POST['submit'])){
                         </div>
                       </div>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputStatusBus" class="form-label d-block">Status</label>
                       <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" value="Operasional" checked />
@@ -375,43 +381,43 @@ if(isset ($_POST['submit'])){
                         <label class="form-check-label" for="exampleRadios2"> Pemeliharaan/Maintenance </label>
                       </div>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputTarif" class="form-label">Tarif</label>
                       <div class="input-group mb-3">
                         <span class="input-group-text tarif">Rp</span>
-                        <input type="text" class="form-control form-control-user2" aria-label="Amount (to the nearest dollar)">
+                        <input type="text" class="form-control" aria-label="Amount (to the nearest dollar)">
                       </div>
                     </div>
                   </div>
                   <div class="col-md-6">
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputTglPemberangkatan" class="form-label">Tanggal Pemberangkatan</label>
-                      <input type="date" class="form-control form-control-user2" id="InputTglPemberangkatan" name="txt_Tgl" >
+                      <input type="date" class="form-control" id="InputTglPemberangkatan" name="txt_Tgl" >
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputWaktu" class="form-label">Waktu pemberangkatan</label>
-                      <input type="time" class="form-control form-control-user2" id="InputWaktu" name="txt_waktu" >
+                      <input type="time" class="form-control" id="InputWaktu" name="txt_waktu" >
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputPemberangkatan" class="form-label">Pemberangkatan</label>
-                      <input type="text" class="form-control form-control-user2" id="InputPemberangkatan" name="txt_Pemberangkatan" placeholder="" />
+                      <input type="text" class="form-control" id="InputPemberangkatan" name="txt_Pemberangkatan" placeholder="" />
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputTujuan" class="form-label">Tujuan</label>
-                      <input type="text" class="form-control form-control-user2" id="InputTujuan" name="txt_Tujuan" placeholder="" />
+                      <input type="text" class="form-control" id="InputTujuan" name="txt_Tujuan" placeholder="" />
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputWaktuKedatangan" class="form-label">Estimasi Waktu Kedatangan</label>
-                      <input type="time" class="form-control form-control-user2" id="InputWaktuKedatangan" name="txt_waktuDatang" >
+                      <input type="time" class="form-control" id="InputWaktuKedatangan" name="txt_waktuDatang" >
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="InputDetail" class="form-label">Detail Rute</label>
-                      <input type="text" class="form-control form-control-user2" id="InputDetail" name="txt_Detail" placeholder="" />
+                      <input type="text" class="form-control" id="InputDetail" name="txt_Detail" placeholder="" />
                     </div>
                   </div>
                   <div class="mb-5"></div>
                   <div class="col-12 d-flex justify-content-center">
-                    <button type="submit" name="register" class="btn btn-success roundedBtn text-white btn-block3">Tambah</button>
+                    <button type="submit" name="register" class="btn btn-success px-5">Tambah</button>
                   </div>
                 </div>
               </form>
@@ -430,5 +436,6 @@ if(isset ($_POST['submit'])){
     <script src="plugin/js/datatables-demo.js"></script>
     <script src="plugin/js/javascript.js"></script>
     <script src="plugin/js/UpImg.js"></script>
-  </body>
+    <script src="js/theme-switcher.js"></script>
+</body>
 </html>

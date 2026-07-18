@@ -18,14 +18,16 @@ $email = $_GET['nama'];
 <!DOCTYPE html>
 <html lang="en">
   <head>
+  <script src="js/theme-init.js"></script>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SI-BOSS Express</title>
     <link rel="stylesheet" href="plugin/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="plugin/font/stylesheet.css" />
-    <link rel="stylesheet" href="plugin/fontawesome-free/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -33,7 +35,6 @@ $email = $_GET['nama'];
     
     <!-- ini -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.6.5/css/buttons.dataTables.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
   </head>
 
@@ -46,14 +47,8 @@ $email = $_GET['nama'];
       <div class="row g-2 m-0 px-4">
         <div class="col-lg-12">
           <div class="card shadow mb-4 rounded">
-            <div class="card-header shadow rounded">
-              <div class="title float-start">
-                <span class="m-0"><b>Tabel Data Laporan</b></span>
-              </div>
-              <div class="btnAction float-end">
-                <!-- <button class="btn btn-light text-dark btn-circle custShadow2 me-2" data-bs-toggle="modal" data-bs-target="#tambahDataPemesanan"><i class="fas fa-plus" data-bs-toggle="tooltip" title="Tambah Data"></i></button>
-                <button class="btn btn-light text-danger btn-circle custShadow2" data-bs-toggle="modal" data-bs-target="#deleteDataPemesanan"><i class="fas fa-trash" data-bs-toggle="tooltip" title="Hapus Data"></i></button> -->
-              </div>
+            <div class="card-header d-flex justify-content-between align-items-center py-3">
+              <h5 class="m-0 font-weight-bold text-white">Tabel Data Laporan</h5>
             </div>
             
             <div class="card-body">
@@ -143,10 +138,10 @@ $email = $_GET['nama'];
                   </tbody>
                 </table>
                 <div class="col-2 d-flex justify-content-start">
-                            <a href="dataLaporan.php" class="btn btn-daftar btn-block py-2">
-                              <span>Kembali</span>
-                            </a>
-                          </div>
+                  <a href="dataLaporan.php" class="btn btn-secondary w-100 py-2">
+                    <span>Kembali</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -183,6 +178,7 @@ $(document).ready(function() {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/1.6.5/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/1.6.5/js/buttons.print.min.js"></script>
-  </body>
+    <script src="js/theme-switcher.js"></script>
+</body>
 </html>
 

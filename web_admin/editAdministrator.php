@@ -23,10 +23,10 @@
     if(!$obj->detailAdministrator($id_user_admin)) die ("Error: Id tidak ada");
         if($obj->updateAdministrator($nama, $jenis_kelamin, $alamat, $no_hp, $foto, $id_level, $id_terminal, $email, $password, $id_user_admin)){
             echo '<div class="alert alert-success">Data Berhasil disimpan</div>';
-            header("Location: dataAkun.php");
+            header("Location: dataAkunInternal.php");
         } else {
             echo '<div class="alert alert-success">Data gagal disimpan</div>';
-            header("Location: dataAkun.php");
+            header("Location: dataAkunInternal.php");
         }
       }
     ?>

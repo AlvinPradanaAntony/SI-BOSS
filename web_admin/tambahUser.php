@@ -49,10 +49,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     if($obj->insertUser($nik_user, $nama_user, $tempat_lahir_user, $tanggal_lahir_user, $jenis_kelamin_user, $alamat_user, $no_hp_user, $foto_user, $email_user, $password_user)){
         echo '<div class="alert alert-success">Data Berhasil Ditambahkan</div>';
-        header("Location: dataAkun.php");
+        header("Location: dataAkunUser.php");
     } else{
         echo '<div class="alert alert-danger">Data Gagal Ditambahkan</div>';
-        header("Location: dataAkun.php");
+        header("Location: dataAkunUser.php");
     }
 }
 

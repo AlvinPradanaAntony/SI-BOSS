@@ -49,9 +49,9 @@
     if(!$obj->detailUser($nik_user)) die ("Error: Id tidak ada"); 
         if($obj->updateUser($nama_user, $tempat_lahir_user, $tanggal_lahir_user, $jenis_kelamin_user, $alamat_user, $no_hp_user, $foto_user, $email_user, $password_user, $nik_user)){
             echo '<div class="alert alert-success">Data Berhasil disimpan</div>';
-            header("Location: dataAkun.php");
+            header("Location: dataAkunUser.php");
         } else {
             echo '<div class="alert alert-success">Data gagal disimpan</div>';
-            header("Location: dataAkun.php");
+            header("Location: dataAkunUser.php");
         }
 ?>
